@@ -1,0 +1,11 @@
+name = "freesauce"
+main = "./dist/server/entry.mjs"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+assets = { directory = "./dist/client" }
+
+[[d1_databases]]
+binding = "DB"
+database_name = "freesauce-db"
+database_id = "73829d8d-49df-4bf0-8a7b-70869a4ff08c"

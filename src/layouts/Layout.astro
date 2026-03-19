@@ -1,0 +1,136 @@
+---
+interface Props {
+  title: string;
+  description?: string;
+}
+
+const { title, description = "Find free sauce at pie shops across Australia 🇦🇺🥧" } = Astro.props;
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <title>{title}</title>
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <style is:global>
+      @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700&display=swap');
+
+      :root {
+        --sauce-red: #c0392b;
+        --sauce-dark: #922b21;
+        --pie-gold: #f39c12;
+        --pie-crust: #d4a04a;
+        --pastry: #fef3e2;
+        --meat: #5d3a1a;
+        --green: #27ae60;
+        --aussie-green: #00843D;
+        --aussie-gold: #FFCD00;
+      }
+
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+
+      body {
+        font-family: 'Inter', sans-serif;
+        background: var(--pastry);
+        color: var(--meat);
+        min-height: 100vh;
+      }
+
+      h1, h2, h3 {
+        font-family: 'Lilita One', cursive;
+      }
+
+      .nav {
+        background: var(--sauce-red);
+        padding: 0.75rem 1.5rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+      }
+
+      .nav a {
+        color: white;
+        text-decoration: none;
+        font-weight: 700;
+        font-size: 0.95rem;
+        transition: opacity 0.2s;
+      }
+
+      .nav a:hover { opacity: 0.8; }
+
+      .nav .logo {
+        font-family: 'Lilita One', cursive;
+        font-size: 1.4rem;
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .nav .links {
+        display: flex;
+        gap: 1.5rem;
+        align-items: center;
+      }
+
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.6rem 1.2rem;
+        border: none;
+        border-radius: 2rem;
+        font-weight: 700;
+        font-size: 0.95rem;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-decoration: none;
+        font-family: 'Inter', sans-serif;
+      }
+
+      .btn-sauce {
+        background: var(--sauce-red);
+        color: white;
+      }
+      .btn-sauce:hover {
+        background: var(--sauce-dark);
+        transform: translateY(-1px);
+      }
+
+      .btn-gold {
+        background: var(--pie-gold);
+        color: var(--meat);
+      }
+      .btn-gold:hover {
+        background: var(--pie-crust);
+        transform: translateY(-1px);
+      }
+
+      .btn-green {
+        background: var(--aussie-green);
+        color: white;
+      }
+      .btn-green:hover {
+        background: #006b31;
+        transform: translateY(-1px);
+      }
+    </style>
+  </head>
+  <body>
+    <nav class="nav">
+      <a href="/" class="logo">🥧 FREE SAUCE</a>
+      <div class="links">
+        <a href="/">Map</a>
+        <a href="/add">Add a Shop</a>
+      </div>
+    </nav>
+    <slot />
+  </body>
+</html>

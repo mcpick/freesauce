@@ -1,0 +1,230 @@
+---
+import Layout from '../layouts/Layout.astro';
+---
+
+<Layout title="Add a Pie Shop — Free Sauce">
+  <main class="add-page">
+    <section class="form-section">
+      <h1>🥫 Chuck a Shop on the Map</h1>
+      <p class="intro">Know a pie shop that does free sauce? Legend. Add it here and help your fellow Aussies find the good stuff.</p>
+
+      <form id="addForm">
+        <div class="field">
+          <label for="name">Shop Name *</label>
+          <input type="text" id="name" name="name" placeholder="e.g. Big Dave's Bakery" required />
+        </div>
+
+        <div class="field">
+          <label for="address">Address *</label>
+          <input type="text" id="address" name="address" placeholder="e.g. 42 Pie St, Sauceville SA 5000" required />
+          <small>Full address so we can find it on the map</small>
+        </div>
+
+        <div class="field-row">
+          <div class="field">
+            <label for="suburb">Suburb</label>
+            <input type="text" id="suburb" name="suburb" placeholder="e.g. Sauceville" />
+          </div>
+          <div class="field">
+            <label for="state">State *</label>
+            <select id="state" name="state" required>
+              <option value="">Pick one</option>
+              <option value="NSW">NSW</option>
+              <option value="VIC">VIC</option>
+              <option value="QLD">QLD</option>
+              <option value="SA">SA</option>
+              <option value="WA">WA</option>
+              <option value="TAS">TAS</option>
+              <option value="NT">NT</option>
+              <option value="ACT">ACT</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="field">
+          <label>Sauce Types (tick all that apply)</label>
+          <div class="checkboxes">
+            <label class="cb"><input type="checkbox" name="sauce" value="tomato" checked /> 🍅 Tomato</label>
+            <label class="cb"><input type="checkbox" name="sauce" value="bbq" /> 🔥 BBQ</label>
+            <label class="cb"><input type="checkbox" name="sauce" value="chilli" /> 🌶️ Chilli</label>
+            <label class="cb"><input type="checkbox" name="sauce" value="mustard" /> 🟡 Mustard</label>
+            <label class="cb"><input type="checkbox" name="sauce" value="other" /> 🤷 Other</label>
+          </div>
+        </div>
+
+        <div class="field">
+          <label for="submittedBy">Your Name (optional)</label>
+          <input type="text" id="submittedBy" name="submittedBy" placeholder="e.g. Davo" />
+          <small>So we can credit you, legend</small>
+        </div>
+
+        <div id="msg" class="msg" style="display:none;"></div>
+
+        <button type="submit" class="btn btn-sauce submit-btn">🥫 Add to the Map</button>
+      </form>
+    </section>
+  </main>
+
+  <style>
+    .add-page {
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem 3rem;
+    }
+
+    .form-section h1 {
+      font-size: 1.8rem;
+      color: var(--sauce-red);
+      margin-bottom: 0.5rem;
+    }
+
+    .intro {
+      margin-bottom: 2rem;
+      font-size: 1rem;
+      line-height: 1.6;
+      opacity: 0.85;
+    }
+
+    .field {
+      margin-bottom: 1.25rem;
+    }
+
+    .field label {
+      display: block;
+      font-weight: 700;
+      margin-bottom: 0.35rem;
+      font-size: 0.95rem;
+    }
+
+    .field input, .field select {
+      width: 100%;
+      padding: 0.7rem 1rem;
+      border: 2px solid #ddd;
+      border-radius: 0.5rem;
+      font-size: 1rem;
+      font-family: 'Inter', sans-serif;
+      transition: border-color 0.2s;
+    }
+
+    .field input:focus, .field select:focus {
+      outline: none;
+      border-color: var(--sauce-red);
+    }
+
+    .field small {
+      display: block;
+      margin-top: 0.25rem;
+      font-size: 0.8rem;
+      opacity: 0.6;
+    }
+
+    .field-row {
+      display: grid;
+      grid-template-columns: 2fr 1fr;
+      gap: 1rem;
+    }
+
+    .checkboxes {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.25rem;
+    }
+
+    .cb {
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+      font-weight: 400;
+      font-size: 0.95rem;
+      cursor: pointer;
+    }
+
+    .cb input {
+      width: auto;
+      cursor: pointer;
+    }
+
+    .submit-btn {
+      width: 100%;
+      padding: 0.85rem;
+      font-size: 1.1rem;
+      margin-top: 0.5rem;
+    }
+
+    .msg {
+      padding: 0.75rem 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+
+    .msg.success {
+      background: #d5f5e3;
+      color: #1e8449;
+    }
+
+    .msg.error {
+      background: #fadbd8;
+      color: #922b21;
+    }
+
+    @media (max-width: 500px) {
+      .field-row {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+
+  <script is:inline>
+    document.getElementById('addForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const form = e.target;
+      const btn = form.querySelector('button[type="submit"]');
+      const msg = document.getElementById('msg');
+
+      btn.disabled = true;
+      btn.textContent = '🔄 Adding...';
+      msg.style.display = 'none';
+
+      const sauces = [...form.querySelectorAll('input[name="sauce"]:checked')]
+        .map(c => c.value).join(',');
+
+      const data = {
+        name: form.querySelector('#name').value.trim(),
+        address: form.querySelector('#address').value.trim(),
+        suburb: form.querySelector('#suburb').value.trim(),
+        state: form.querySelector('#state').value,
+        sauce_types: sauces || 'tomato',
+        submitted_by: form.querySelector('#submittedBy').value.trim() || 'Anonymous legend',
+      };
+
+      try {
+        const res = await fetch('/api/shops', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(data),
+        });
+
+        const result = await res.json();
+
+        if (res.ok) {
+          msg.className = 'msg success';
+          msg.textContent = '🎉 You beauty! Shop added. It\'ll show up once we verify it.';
+          msg.style.display = 'block';
+          form.reset();
+        } else {
+          throw new Error(result.error || 'Something went wrong');
+        }
+      } catch (err) {
+        msg.className = 'msg error';
+        msg.textContent = `❌ ${err.message}. Give it another crack.`;
+        msg.style.display = 'block';
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🥫 Add to the Map';
+    });
+  </script>
+</Layout>
