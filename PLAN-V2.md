@@ -21,9 +21,10 @@ Generate slugs for existing entries via migration script.
 - User takes a photo of the free sauce bottle at the shop
 - Frontend: `<input type="file" accept="image/*" capture="environment">` (opens camera on mobile)
 - **Client-side:** Validate max 5MB before upload
+- **Client-side resize:** Canvas API — resize to max 1024px wide, JPEG at 80% quality before upload. Keeps upload small and avoids Workers image processing costs.
 - **Backend (Workers):**
-  - Accept multipart form data
-  - Resize to max 1024px wide (use `@cf/image/draw` or sharp-compatible approach on Workers)
+  - Accept multipart form data (already resized)
+  - Validate max 2MB after resize
   - Upload to R2 bucket `freesauce-images`
   - Store R2 key in shops table as `photo_key`
 - **Serving:** Public R2 bucket or presigned URL, served at `/api/photo/[key]`
