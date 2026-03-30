@@ -20,7 +20,10 @@ import Layout from '../layouts/Layout.astro';
       <div id="map"></div>
       <div class="legend">
         <span class="legend-item"><span class="dot verified"></span> Verified</span>
-        <span class="legend-item"><span class="dot unverified"></span> Community Added</span>
+        <label class="legend-item toggle">
+          <input type="checkbox" id="showUnverified" />
+          <span class="dot unverified"></span> Show unverified
+        </label>
       </div>
     </section>
 
@@ -108,6 +111,14 @@ import Layout from '../layouts/Layout.astro';
       display: flex;
       align-items: center;
       gap: 0.4rem;
+    }
+
+    .legend-item.toggle {
+      cursor: pointer;
+    }
+
+    .legend-item input[type="checkbox"] {
+      margin-right: 0.2rem;
     }
 
     .dot {
@@ -203,13 +214,18 @@ import Layout from '../layouts/Layout.astro';
       popupAnchor: [0, -16],
     });
 
+    let showUnverified = false;
+    const verifiedMarkers = [];
+    const unverifiedMarkers = [];
+
     async function loadShops() {
       try {
         const res = await fetch('/api/shops');
         const shops = await res.json();
 
-        document.getElementById('stats').textContent =
-          `${shops.length} sauce spots and counting`;
+        // Update stats to show verified count
+        const verifiedCount = shops.filter(s => s.verified).length;
+        document.getElementById('stats').textContent = `${verifiedCount} verified sauce spots`;
 
         shops.forEach(shop => {
           const sauces = shop.sauce_types
@@ -220,8 +236,7 @@ import Layout from '../layouts/Layout.astro';
           const voteCount = (shop.vote_up_count || 0) + (shop.vote_down_count || 0);
           const lastActivity = shop.last_activity ? timeAgo(shop.last_activity) : 'Recently added';
 
-          L.marker([shop.lat, shop.lng], { icon: sauceIcon(shop.verified) })
-            .addTo(map)
+          const marker = L.marker([shop.lat, shop.lng], { icon: sauceIcon(shop.verified) })
             .bindPopup(`
               <div style="font-family:Inter,sans-serif;min-width:200px;">
                 <div style="margin-bottom:8px;">
@@ -246,13 +261,40 @@ import Layout from '../layouts/Layout.astro';
                 </div>
               </div>
             `);
+
+          if (shop.verified) {
+            marker.addTo(map);
+            verifiedMarkers.push(marker);
+          } else {
+            unverifiedMarkers.push(marker);
+          }
         });
+
+        // Load saved preference
+        if (localStorage.getItem('showUnverified') === 'true') {
+          document.getElementById('showUnverified').checked = true;
+          showUnverified = true;
+          unverifiedMarkers.forEach(m => m.addTo(map));
+        }
       } catch (e) {
         console.error('Failed to load shops:', e);
       }
     }
 
     loadShops();
+
+    // Toggle handler for showing/hiding unverified shops
+    document.getElementById('showUnverified').addEventListener('change', (e) => {
+      showUnverified = e.target.checked;
+      unverifiedMarkers.forEach(m => {
+        if (showUnverified) {
+          m.addTo(map);
+        } else {
+          m.remove();
+        }
+      });
+      localStorage.setItem('showUnverified', showUnverified);
+    });
 
     document.getElementById('nearMe').addEventListener('click', () => {
       const btn = document.getElementById('nearMe');

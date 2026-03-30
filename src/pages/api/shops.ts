@@ -5,6 +5,7 @@ import { createDb } from '@/db';
 import { shops, votes } from '@/db/schema';
 import { sql, eq, desc, asc } from 'drizzle-orm';
 import type { InferInsertModel } from 'drizzle-orm';
+import { verifyShop } from '@/lib/verify';
 
 export const prerender = false;
 
@@ -35,6 +36,7 @@ export const GET: APIRoute = async () => {
         state: shops.state,
         slug: shops.slug,
         photo_key: shops.photo_key,
+        google_place_id: shops.google_place_id,
         vote_up_count: sql<number>`COALESCE(
           (SELECT COUNT(*) FROM ${votes} WHERE ${votes.shop_id} = ${shops.id} AND ${votes.vote} = 'up' AND ${votes.status} = 'confirmed'), 
           0
@@ -179,6 +181,49 @@ export const POST: APIRoute = async ({ request }) => {
         console.error('Photo upload failed:', photoErr);
         // Continue without photo - don't fail the entire shop creation
       }
+    }
+
+    // Background verification using Google Places API
+    const verifyPromise = (async () => {
+      try {
+        if (!env.GOOGLE_PLACES_API_KEY) {
+          console.log('No Google Places API key configured, skipping verification');
+          return;
+        }
+        
+        const result = await verifyShop(name, lat, lng, env.GOOGLE_PLACES_API_KEY);
+        
+        if (result.verified) {
+          await db.update(shops)
+            .set({ 
+              verified: 1, 
+              google_place_id: result.google_place_id 
+            })
+            .where(eq(shops.id, shopId));
+          
+          console.log(`Shop ${shopId} verified with confidence: ${result.confidence}`);
+        } else {
+          console.log(`Shop ${shopId} could not be verified: ${result.confidence} confidence`);
+        }
+      } catch (e) {
+        console.error('Verification failed:', e);
+      }
+    })();
+
+    // Try to use waitUntil if available, otherwise just await
+    try {
+      // Check for execution context from various possible locations
+      // @ts-ignore
+      const ctx = env.ctx || globalThis.__env__?.ctx || globalThis.ctx;
+      if (ctx?.waitUntil) {
+        ctx.waitUntil(verifyPromise);
+      } else {
+        // If no waitUntil available, run inline (it's only ~200ms)
+        await verifyPromise;
+      }
+    } catch {
+      // Fallback to inline execution
+      await verifyPromise;
     }
 
     return new Response(

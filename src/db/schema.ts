@@ -15,6 +15,7 @@ export const shops = sqliteTable('shops', {
   state: text('state'),
   slug: text('slug').unique(),
   photo_key: text('photo_key'),
+  google_place_id: text('google_place_id'),
 });
 
 export const votes = sqliteTable('votes', {
