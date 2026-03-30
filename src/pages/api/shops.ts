@@ -102,23 +102,28 @@ export const POST: APIRoute = async ({ request }) => {
       );
     }
 
-    // Geocode using Nominatim (free, no key needed)
-    const query = `${address}, ${state}, Australia`;
-    const geoRes = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=au&limit=1`,
-      { headers: { 'User-Agent': 'FreeSauce/1.0 (thefreesauce.quest)' } }
-    );
-    const geoData: any[] = await geoRes.json();
+    // Use provided lat/lng (from Google autocomplete) or fall back to Nominatim geocoding
+    let lat = parseFloat(body.lat);
+    let lng = parseFloat(body.lng);
 
-    if (!geoData || geoData.length === 0) {
-      return new Response(
-        JSON.stringify({ error: "Couldn't find that address on the map. Double-check it?" }),
-        { status: 400, headers: { 'Content-Type': 'application/json' } }
+    if (!lat || !lng || isNaN(lat) || isNaN(lng)) {
+      const query = `${address}, ${state}, Australia`;
+      const geoRes = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&countrycodes=au&limit=1`,
+        { headers: { 'User-Agent': 'FreeSauce/1.0 (thefreesauce.quest)' } }
       );
-    }
+      const geoData: any[] = await geoRes.json();
 
-    const lat = parseFloat(geoData[0].lat);
-    const lng = parseFloat(geoData[0].lon);
+      if (!geoData || geoData.length === 0) {
+        return new Response(
+          JSON.stringify({ error: "Couldn't find that address on the map. Double-check it?" }),
+          { status: 400, headers: { 'Content-Type': 'application/json' } }
+        );
+      }
+
+      lat = parseFloat(geoData[0].lat);
+      lng = parseFloat(geoData[0].lon);
+    }
 
     // Generate unique slug
     let baseSlug = slugify(name, suburb || '');
