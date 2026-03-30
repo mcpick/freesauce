@@ -53,6 +53,16 @@ import Layout from '../layouts/Layout.astro';
         </div>
 
         <div class="field">
+          <label for="photo">Shop Photo (optional)</label>
+          <input type="file" id="photo" name="photo" accept="image/*" capture="environment" />
+          <small>Take a photo of the free sauce at this shop</small>
+          <div id="photoPreview" class="photo-preview" style="display:none;">
+            <img id="previewImg" alt="Photo preview" />
+            <p class="preview-info">Photo ready to upload</p>
+          </div>
+        </div>
+
+        <div class="field">
           <label for="submittedBy">Your Name (optional)</label>
           <input type="text" id="submittedBy" name="submittedBy" placeholder="e.g. Davo" />
           <small>So we can credit you, legend</small>
@@ -170,6 +180,28 @@ import Layout from '../layouts/Layout.astro';
       color: #922b21;
     }
 
+    .photo-preview {
+      margin-top: 1rem;
+      padding: 1rem;
+      border: 2px dashed #ddd;
+      border-radius: 0.5rem;
+      text-align: center;
+    }
+
+    .photo-preview img {
+      max-width: 100%;
+      max-height: 200px;
+      border-radius: 0.5rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .preview-info {
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--sauce-red);
+      font-weight: 600;
+    }
+
     @media (max-width: 500px) {
       .field-row {
         grid-template-columns: 1fr;
@@ -178,6 +210,63 @@ import Layout from '../layouts/Layout.astro';
   </style>
 
   <script is:inline>
+    let resizedPhoto = null;
+
+    // Handle photo selection and resize
+    document.getElementById('photo').addEventListener('change', async (e) => {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      // Validate file size (5MB max before resize)
+      if (file.size > 5 * 1024 * 1024) {
+        alert('Photo too large. Please choose a smaller image (max 5MB).');
+        e.target.value = '';
+        return;
+      }
+
+      try {
+        resizedPhoto = await resizeImage(file, 1024, 0.8);
+        
+        // Show preview
+        const preview = document.getElementById('photoPreview');
+        const previewImg = document.getElementById('previewImg');
+        previewImg.src = URL.createObjectURL(resizedPhoto);
+        preview.style.display = 'block';
+      } catch (err) {
+        alert('Error processing photo: ' + err.message);
+        e.target.value = '';
+      }
+    });
+
+    // Resize image using Canvas API
+    function resizeImage(file, maxWidth, quality) {
+      return new Promise((resolve, reject) => {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const img = new Image();
+
+        img.onload = () => {
+          // Calculate new dimensions
+          let { width, height } = img;
+          if (width > maxWidth) {
+            height = (height * maxWidth) / width;
+            width = maxWidth;
+          }
+
+          canvas.width = width;
+          canvas.height = height;
+
+          // Draw and compress
+          ctx.drawImage(img, 0, 0, width, height);
+          
+          canvas.toBlob(resolve, 'image/jpeg', quality);
+        };
+
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
     document.getElementById('addForm').addEventListener('submit', async (e) => {
       e.preventDefault();
       const form = e.target;
@@ -191,20 +280,23 @@ import Layout from '../layouts/Layout.astro';
       const sauces = [...form.querySelectorAll('input[name="sauce"]:checked')]
         .map(c => c.value).join(',');
 
-      const data = {
-        name: form.querySelector('#name').value.trim(),
-        address: form.querySelector('#address').value.trim(),
-        suburb: form.querySelector('#suburb').value.trim(),
-        state: form.querySelector('#state').value,
-        sauce_types: sauces || 'tomato',
-        submitted_by: form.querySelector('#submittedBy').value.trim() || 'Anonymous legend',
-      };
+      // Use FormData to handle both text and photo upload
+      const formData = new FormData();
+      formData.append('name', form.querySelector('#name').value.trim());
+      formData.append('address', form.querySelector('#address').value.trim());
+      formData.append('suburb', form.querySelector('#suburb').value.trim());
+      formData.append('state', form.querySelector('#state').value);
+      formData.append('sauce_types', sauces || 'tomato');
+      formData.append('submitted_by', form.querySelector('#submittedBy').value.trim() || 'Anonymous legend');
+      
+      if (resizedPhoto) {
+        formData.append('photo', resizedPhoto, 'photo.jpg');
+      }
 
       try {
         const res = await fetch('/api/shops', {
           method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
+          body: formData, // No Content-Type header - let browser set it for multipart
         });
 
         const result = await res.json();
@@ -214,6 +306,8 @@ import Layout from '../layouts/Layout.astro';
           msg.textContent = '🎉 You beauty! Shop added. It\'ll show up once we verify it.';
           msg.style.display = 'block';
           form.reset();
+          document.getElementById('photoPreview').style.display = 'none';
+          resizedPhoto = null;
         } else {
           throw new Error(result.error || 'Something went wrong');
         }
