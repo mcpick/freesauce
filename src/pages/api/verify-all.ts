@@ -56,14 +56,17 @@ export const POST: APIRoute = async ({ request }) => {
           shop.name, 
           shop.lat, 
           shop.lng, 
-          env.GOOGLE_PLACES_API_KEY
+          env.GOOGLE_PLACES_API_KEY,
+          shop.id,
+          env.IMAGES,
         );
 
         if (result.verified) {
           await db.update(shops)
             .set({ 
               verified: 1, 
-              google_place_id: result.google_place_id 
+              google_place_id: result.google_place_id,
+              google_photo_key: result.google_photo_key,
             })
             .where(eq(shops.id, shop.id));
           

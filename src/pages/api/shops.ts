@@ -37,6 +37,7 @@ export const GET: APIRoute = async () => {
         slug: shops.slug,
         photo_key: shops.photo_key,
         google_place_id: shops.google_place_id,
+        google_photo_key: shops.google_photo_key,
         vote_up_count: sql<number>`COALESCE(
           (SELECT COUNT(*) FROM ${votes} WHERE ${votes.shop_id} = ${shops.id} AND ${votes.vote} = 'up' AND ${votes.status} = 'confirmed'), 
           0
@@ -191,13 +192,14 @@ export const POST: APIRoute = async ({ request }) => {
           return;
         }
         
-        const result = await verifyShop(name, lat, lng, env.GOOGLE_PLACES_API_KEY);
+        const result = await verifyShop(name, lat, lng, env.GOOGLE_PLACES_API_KEY, shopId, env.IMAGES);
         
         if (result.verified) {
           await db.update(shops)
             .set({ 
               verified: 1, 
-              google_place_id: result.google_place_id 
+              google_place_id: result.google_place_id,
+              google_photo_key: result.google_photo_key,
             })
             .where(eq(shops.id, shopId));
           
