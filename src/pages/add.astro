@@ -3,600 +3,640 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Add a Pie Shop — Free Sauce">
-  <main class="add-page">
-    <section class="form-section">
-      <h1>🥫 Chuck a Shop on the Map</h1>
-      <p class="intro">Know a pie shop that does free sauce? Legend. Add it here and help your fellow Aussies find the good stuff.</p>
+    <main class="mx-auto max-w-[600px] px-6 pt-8 pb-12">
+        <section>
+            <h1 class="mb-2 text-3xl text-primary">🥫 Chuck a Shop on the Map</h1>
+            <p class="mb-8 leading-relaxed opacity-85">
+                Know a pie shop that does free sauce? Legend. Add it here and
+                help your fellow Aussies find the good stuff.
+            </p>
 
-      <form id="addForm">
-        <div class="field autocomplete-field">
-          <label for="shopSearch">Search for the shop *</label>
-          <input type="text" id="shopSearch" placeholder="Start typing a bakery or pie shop name..." autocomplete="off" required />
-          <small>We'll look it up on Google to verify it's a real spot</small>
-          <div id="suggestions" class="suggestions-dropdown" style="display:none;"></div>
-        </div>
+            <form id="addForm">
+                <div class="relative mb-5">
+                    <label
+                        for="shopSearch"
+                        class="mb-1.5 block text-sm font-bold"
+                    >
+                        Search for the shop *
+                    </label>
+                    <input
+                        type="text"
+                        id="shopSearch"
+                        placeholder="Start typing a bakery or pie shop name..."
+                        autocomplete="off"
+                        required
+                        class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                    />
+                    <small class="mt-1 block text-xs opacity-60">
+                        We'll look it up on Google to verify it's a real spot
+                    </small>
+                    <div
+                        id="suggestions"
+                        class="absolute inset-x-0 top-full z-[100] hidden max-h-[300px] overflow-y-auto rounded-b-lg border-2 border-t-0 border-primary bg-white shadow-lg"
+                    >
+                    </div>
+                </div>
 
-        <div id="selectedShop" class="selected-shop" style="display:none;">
-          <div class="selected-shop-info">
-            <strong id="selectedName"></strong>
-            <span id="selectedAddress" class="selected-address"></span>
-          </div>
-          <button type="button" id="clearSelection" class="clear-btn">✕ Change</button>
-        </div>
+                <div
+                    id="selectedShop"
+                    class="mb-5 hidden items-center justify-between rounded-lg bg-success/20 p-4"
+                >
+                    <div class="flex flex-col gap-0.5">
+                        <strong id="selectedName"></strong>
+                        <span
+                            id="selectedAddress"
+                            class="text-sm opacity-70"
+                        ></span>
+                    </div>
+                    <button
+                        type="button"
+                        id="clearSelection"
+                        class="whitespace-nowrap rounded border border-neutral-400 px-2.5 py-1 text-xs transition-colors hover:border-primary hover:text-primary"
+                    >
+                        ✕ Change
+                    </button>
+                </div>
 
-        <!-- Hidden fields populated by autocomplete -->
-        <input type="hidden" id="name" name="name" />
-        <input type="hidden" id="address" name="address" />
-        <input type="hidden" id="suburb" name="suburb" />
-        <input type="hidden" id="state" name="state" />
-        <input type="hidden" id="placeId" name="placeId" />
-        <input type="hidden" id="lat" name="lat" />
-        <input type="hidden" id="lng" name="lng" />
+                <input type="hidden" id="name" name="name" />
+                <input type="hidden" id="address" name="address" />
+                <input type="hidden" id="suburb" name="suburb" />
+                <input type="hidden" id="state" name="state" />
+                <input type="hidden" id="placeId" name="placeId" />
+                <input type="hidden" id="lat" name="lat" />
+                <input type="hidden" id="lng" name="lng" />
 
-        <div class="field">
-          <label>Sauce Types (tick all that apply)</label>
-          <div class="checkboxes">
-            <label class="cb"><input type="checkbox" name="sauce" value="tomato" checked /> 🍅 Tomato</label>
-            <label class="cb"><input type="checkbox" name="sauce" value="bbq" /> 🔥 BBQ</label>
-            <label class="cb"><input type="checkbox" name="sauce" value="chilli" /> 🌶️ Chilli</label>
-            <label class="cb"><input type="checkbox" name="sauce" value="mustard" /> 🟡 Mustard</label>
-            <label class="cb"><input type="checkbox" name="sauce" value="other" /> 🤷 Other</label>
-          </div>
-        </div>
+                <div class="mb-5">
+                    <label class="mb-1.5 block text-sm font-bold">
+                        Sauce Types (tick all that apply)
+                    </label>
+                    <div class="mt-1 flex flex-wrap gap-3">
+                        <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                            <input
+                                type="checkbox"
+                                name="sauce"
+                                value="tomato"
+                                checked
+                            />
+                            🍅 Tomato
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                            <input type="checkbox" name="sauce" value="bbq" />
+                            🔥 BBQ
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                            <input
+                                type="checkbox"
+                                name="sauce"
+                                value="chilli"
+                            />
+                            🌶️ Chilli
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                            <input
+                                type="checkbox"
+                                name="sauce"
+                                value="mustard"
+                            />
+                            🟡 Mustard
+                        </label>
+                        <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                            <input type="checkbox" name="sauce" value="other" />
+                            🤷 Other
+                        </label>
+                    </div>
+                </div>
 
-        <div class="field">
-          <label for="photo">Shop Photo (optional)</label>
-          <input type="file" id="photo" name="photo" accept="image/*" capture="environment" />
-          <small>Take a photo of the free sauce at this shop</small>
-          <div id="photoPreview" class="photo-preview" style="display:none;">
-            <img id="previewImg" alt="Photo preview" />
-            <p class="preview-info">Photo ready to upload</p>
-          </div>
-        </div>
+                <div class="mb-5">
+                    <label
+                        for="photo"
+                        class="mb-1.5 block text-sm font-bold"
+                    >
+                        Shop Photo (optional)
+                    </label>
+                    <input
+                        type="file"
+                        id="photo"
+                        name="photo"
+                        accept="image/*"
+                        capture="environment"
+                        class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base file:mr-3 file:rounded file:border-0 file:bg-primary/10 file:px-3 file:py-1 file:text-sm file:text-primary"
+                    />
+                    <small class="mt-1 block text-xs opacity-60">
+                        Take a photo of the free sauce at this shop
+                    </small>
+                    <div
+                        id="photoPreview"
+                        class="mt-4 hidden rounded-lg border-2 border-dashed border-neutral-300 p-4 text-center"
+                    >
+                        <img
+                            id="previewImg"
+                            alt="Photo preview"
+                            class="mx-auto max-h-[200px] max-w-full rounded-lg"
+                        />
+                        <p class="mt-2 text-sm font-semibold text-primary">
+                            Photo ready to upload
+                        </p>
+                    </div>
+                </div>
 
-        <div class="field">
-          <label for="submittedBy">Your Name (optional)</label>
-          <input type="text" id="submittedBy" name="submittedBy" placeholder="e.g. Davo" />
-          <small>So we can credit you, legend</small>
-        </div>
+                <div class="mb-5">
+                    <label
+                        for="submittedBy"
+                        class="mb-1.5 block text-sm font-bold"
+                    >
+                        Your Name (optional)
+                    </label>
+                    <input
+                        type="text"
+                        id="submittedBy"
+                        name="submittedBy"
+                        placeholder="e.g. Davo"
+                        class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                    />
+                    <small class="mt-1 block text-xs opacity-60">
+                        So we can credit you, legend
+                    </small>
+                </div>
 
-        <div id="msg" class="msg" style="display:none;"></div>
+                <div id="msg" class="mb-4 hidden rounded-lg px-4 py-3 text-sm font-semibold"></div>
 
-        <button type="submit" class="btn btn-sauce submit-btn" disabled>🥫 Add to the Map</button>
-      </form>
+                <button
+                    type="submit"
+                    class="mt-2 w-full rounded-full bg-primary px-6 py-3.5 text-lg font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:transform-none"
+                    disabled
+                >
+                    🥫 Add to the Map
+                </button>
+            </form>
 
-      <div class="manual-fallback">
-        <details>
-          <summary>Can't find the shop? Add it manually</summary>
-          <form id="manualForm" class="manual-form">
-            <div class="field">
-              <label for="manualName">Shop Name *</label>
-              <input type="text" id="manualName" placeholder="e.g. Big Dave's Bakery" required />
+            <div class="mt-8">
+                <details>
+                    <summary class="cursor-pointer py-2 text-sm opacity-70">
+                        Can't find the shop? Add it manually
+                    </summary>
+                    <form
+                        id="manualForm"
+                        class="mt-4 border-t border-neutral-200 pt-4"
+                    >
+                        <div class="mb-5">
+                            <label
+                                for="manualName"
+                                class="mb-1.5 block text-sm font-bold"
+                            >
+                                Shop Name *
+                            </label>
+                            <input
+                                type="text"
+                                id="manualName"
+                                placeholder="e.g. Big Dave's Bakery"
+                                required
+                                class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                            />
+                        </div>
+                        <div class="mb-5">
+                            <label
+                                for="manualAddress"
+                                class="mb-1.5 block text-sm font-bold"
+                            >
+                                Full Address *
+                            </label>
+                            <input
+                                type="text"
+                                id="manualAddress"
+                                placeholder="e.g. 42 Pie St, Sauceville SA 5000"
+                                required
+                                class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                            />
+                        </div>
+                        <div class="mb-5 grid grid-cols-1 gap-4 sm:grid-cols-[2fr_1fr]">
+                            <div>
+                                <label
+                                    for="manualSuburb"
+                                    class="mb-1.5 block text-sm font-bold"
+                                >
+                                    Suburb
+                                </label>
+                                <input
+                                    type="text"
+                                    id="manualSuburb"
+                                    placeholder="e.g. Sauceville"
+                                    class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                                />
+                            </div>
+                            <div>
+                                <label
+                                    for="manualState"
+                                    class="mb-1.5 block text-sm font-bold"
+                                >
+                                    State *
+                                </label>
+                                <select
+                                    id="manualState"
+                                    required
+                                    class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                                >
+                                    <option value="">Pick one</option>
+                                    <option value="NSW">NSW</option>
+                                    <option value="VIC">VIC</option>
+                                    <option value="QLD">QLD</option>
+                                    <option value="SA">SA</option>
+                                    <option value="WA">WA</option>
+                                    <option value="TAS">TAS</option>
+                                    <option value="NT">NT</option>
+                                    <option value="ACT">ACT</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="mb-5">
+                            <label class="mb-1.5 block text-sm font-bold">
+                                Sauce Types
+                            </label>
+                            <div class="mt-1 flex flex-wrap gap-3">
+                                <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="manualSauce"
+                                        value="tomato"
+                                        checked
+                                    />
+                                    🍅 Tomato
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="manualSauce"
+                                        value="bbq"
+                                    />
+                                    🔥 BBQ
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="manualSauce"
+                                        value="chilli"
+                                    />
+                                    🌶️ Chilli
+                                </label>
+                                <label class="flex cursor-pointer items-center gap-1.5 text-sm">
+                                    <input
+                                        type="checkbox"
+                                        name="manualSauce"
+                                        value="mustard"
+                                    />
+                                    🟡 Mustard
+                                </label>
+                            </div>
+                        </div>
+                        <div class="mb-5">
+                            <label
+                                for="manualSubmittedBy"
+                                class="mb-1.5 block text-sm font-bold"
+                            >
+                                Your Name (optional)
+                            </label>
+                            <input
+                                type="text"
+                                id="manualSubmittedBy"
+                                placeholder="e.g. Davo"
+                                class="w-full rounded-lg border-2 border-neutral-300 px-4 py-3 text-base transition-colors focus:border-primary focus:outline-none"
+                            />
+                        </div>
+                        <div
+                            id="manualMsg"
+                            class="mb-4 hidden rounded-lg px-4 py-3 text-sm font-semibold"
+                        >
+                        </div>
+                        <button
+                            type="submit"
+                            class="mt-2 w-full rounded-full bg-primary px-6 py-3.5 text-lg font-bold text-white transition hover:-translate-y-0.5 hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            🥫 Add Manually
+                        </button>
+                    </form>
+                </details>
             </div>
-            <div class="field">
-              <label for="manualAddress">Full Address *</label>
-              <input type="text" id="manualAddress" placeholder="e.g. 42 Pie St, Sauceville SA 5000" required />
-            </div>
-            <div class="field-row">
-              <div class="field">
-                <label for="manualSuburb">Suburb</label>
-                <input type="text" id="manualSuburb" placeholder="e.g. Sauceville" />
-              </div>
-              <div class="field">
-                <label for="manualState">State *</label>
-                <select id="manualState" required>
-                  <option value="">Pick one</option>
-                  <option value="NSW">NSW</option>
-                  <option value="VIC">VIC</option>
-                  <option value="QLD">QLD</option>
-                  <option value="SA">SA</option>
-                  <option value="WA">WA</option>
-                  <option value="TAS">TAS</option>
-                  <option value="NT">NT</option>
-                  <option value="ACT">ACT</option>
-                </select>
-              </div>
-            </div>
-            <div class="field">
-              <label>Sauce Types</label>
-              <div class="checkboxes">
-                <label class="cb"><input type="checkbox" name="manualSauce" value="tomato" checked /> 🍅 Tomato</label>
-                <label class="cb"><input type="checkbox" name="manualSauce" value="bbq" /> 🔥 BBQ</label>
-                <label class="cb"><input type="checkbox" name="manualSauce" value="chilli" /> 🌶️ Chilli</label>
-                <label class="cb"><input type="checkbox" name="manualSauce" value="mustard" /> 🟡 Mustard</label>
-              </div>
-            </div>
-            <div class="field">
-              <label for="manualSubmittedBy">Your Name (optional)</label>
-              <input type="text" id="manualSubmittedBy" placeholder="e.g. Davo" />
-            </div>
-            <div id="manualMsg" class="msg" style="display:none;"></div>
-            <button type="submit" class="btn btn-sauce submit-btn">🥫 Add Manually</button>
-          </form>
-        </details>
-      </div>
-    </section>
-  </main>
+        </section>
+    </main>
 
-  <style>
-    .add-page {
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 2rem 1.5rem 3rem;
-    }
+    <script is:inline>
+        const MSG_BASE = 'mb-4 rounded-lg px-4 py-3 text-sm font-semibold';
+        const MSG_SUCCESS = `${MSG_BASE} bg-success/20 text-[oklch(0.42_0.14_150)]`;
+        const MSG_ERROR = `${MSG_BASE} bg-primary/15 text-primary-dark`;
 
-    .form-section h1 {
-      font-size: 1.8rem;
-      color: var(--sauce-red);
-      margin-bottom: 0.5rem;
-    }
-
-    .intro {
-      margin-bottom: 2rem;
-      font-size: 1rem;
-      line-height: 1.6;
-      opacity: 0.85;
-    }
-
-    .field {
-      margin-bottom: 1.25rem;
-    }
-
-    .field label {
-      display: block;
-      font-weight: 700;
-      margin-bottom: 0.35rem;
-      font-size: 0.95rem;
-    }
-
-    .field input, .field select {
-      width: 100%;
-      padding: 0.7rem 1rem;
-      border: 2px solid #ddd;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      font-family: 'Inter', sans-serif;
-      transition: border-color 0.2s;
-      box-sizing: border-box;
-    }
-
-    .field input:focus, .field select:focus {
-      outline: none;
-      border-color: var(--sauce-red);
-    }
-
-    .field small {
-      display: block;
-      margin-top: 0.25rem;
-      font-size: 0.8rem;
-      opacity: 0.6;
-    }
-
-    .field-row {
-      display: grid;
-      grid-template-columns: 2fr 1fr;
-      gap: 1rem;
-    }
-
-    .autocomplete-field {
-      position: relative;
-    }
-
-    .suggestions-dropdown {
-      position: absolute;
-      top: 100%;
-      left: 0;
-      right: 0;
-      background: white;
-      border: 2px solid var(--sauce-red);
-      border-top: none;
-      border-radius: 0 0 0.5rem 0.5rem;
-      max-height: 300px;
-      overflow-y: auto;
-      z-index: 100;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-    }
-
-    .suggestion-item {
-      padding: 0.75rem 1rem;
-      cursor: pointer;
-      border-bottom: 1px solid #eee;
-      transition: background 0.15s;
-    }
-
-    .suggestion-item:last-child {
-      border-bottom: none;
-    }
-
-    .suggestion-item:hover {
-      background: #fff5f5;
-    }
-
-    .suggestion-main {
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .suggestion-secondary {
-      font-size: 0.8rem;
-      opacity: 0.6;
-      margin-top: 0.15rem;
-    }
-
-    .selected-shop {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      padding: 1rem;
-      background: #d5f5e3;
-      border-radius: 0.5rem;
-      margin-bottom: 1.25rem;
-    }
-
-    .selected-shop-info {
-      display: flex;
-      flex-direction: column;
-      gap: 0.2rem;
-    }
-
-    .selected-address {
-      font-size: 0.85rem;
-      opacity: 0.7;
-    }
-
-    .clear-btn {
-      background: none;
-      border: 1px solid #999;
-      border-radius: 0.25rem;
-      padding: 0.3rem 0.6rem;
-      font-size: 0.8rem;
-      cursor: pointer;
-      white-space: nowrap;
-    }
-
-    .clear-btn:hover {
-      border-color: var(--sauce-red);
-      color: var(--sauce-red);
-    }
-
-    .checkboxes {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.75rem;
-      margin-top: 0.25rem;
-    }
-
-    .cb {
-      display: flex;
-      align-items: center;
-      gap: 0.3rem;
-      font-weight: 400;
-      font-size: 0.95rem;
-      cursor: pointer;
-    }
-
-    .cb input { width: auto; cursor: pointer; }
-
-    .submit-btn {
-      width: 100%;
-      padding: 0.85rem;
-      font-size: 1.1rem;
-      margin-top: 0.5rem;
-    }
-
-    .submit-btn:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-    }
-
-    .msg {
-      padding: 0.75rem 1rem;
-      border-radius: 0.5rem;
-      margin-bottom: 1rem;
-      font-weight: 600;
-      font-size: 0.95rem;
-    }
-
-    .msg.success { background: #d5f5e3; color: #1e8449; }
-    .msg.error { background: #fadbd8; color: #922b21; }
-
-    .photo-preview {
-      margin-top: 1rem;
-      padding: 1rem;
-      border: 2px dashed #ddd;
-      border-radius: 0.5rem;
-      text-align: center;
-    }
-
-    .photo-preview img {
-      max-width: 100%;
-      max-height: 200px;
-      border-radius: 0.5rem;
-    }
-
-    .preview-info {
-      margin-top: 0.5rem;
-      font-size: 0.9rem;
-      color: var(--sauce-red);
-      font-weight: 600;
-    }
-
-    .manual-fallback {
-      margin-top: 2rem;
-    }
-
-    .manual-fallback summary {
-      cursor: pointer;
-      font-size: 0.9rem;
-      opacity: 0.7;
-      padding: 0.5rem 0;
-    }
-
-    .manual-form {
-      margin-top: 1rem;
-      padding-top: 1rem;
-      border-top: 1px solid #eee;
-    }
-
-    @media (max-width: 500px) {
-      .field-row { grid-template-columns: 1fr; }
-    }
-  </style>
-
-  <script is:inline>
-    let resizedPhoto = null;
-    let debounceTimer = null;
-
-    // ── Autocomplete ──────────────────────────────────────────────
-
-    const searchInput = document.getElementById('shopSearch');
-    const suggestionsEl = document.getElementById('suggestions');
-    const selectedShopEl = document.getElementById('selectedShop');
-    const submitBtn = document.querySelector('#addForm button[type="submit"]');
-
-    searchInput.addEventListener('input', () => {
-      clearTimeout(debounceTimer);
-      const val = searchInput.value.trim();
-      if (val.length < 2) {
-        suggestionsEl.style.display = 'none';
-        return;
-      }
-      debounceTimer = setTimeout(() => fetchSuggestions(val), 300);
-    });
-
-    // Close dropdown on outside click
-    document.addEventListener('click', (e) => {
-      if (!e.target.closest('.autocomplete-field')) {
-        suggestionsEl.style.display = 'none';
-      }
-    });
-
-    async function fetchSuggestions(input) {
-      try {
-        const res = await fetch(`/api/places-autocomplete?input=${encodeURIComponent(input)}`);
-        const data = await res.json();
-        
-        if (!data.suggestions || data.suggestions.length === 0) {
-          suggestionsEl.style.display = 'none';
-          return;
+        function setMsg(el, state, text) {
+            el.className = state === 'success' ? MSG_SUCCESS : MSG_ERROR;
+            el.textContent = text;
+            el.style.display = 'block';
         }
 
-        suggestionsEl.innerHTML = data.suggestions.map(s => `
-          <div class="suggestion-item" data-place-id="${s.placeId}">
-            <div class="suggestion-main">${s.mainText}</div>
-            <div class="suggestion-secondary">${s.secondaryText}</div>
-          </div>
-        `).join('');
+        let resizedPhoto = null;
+        let debounceTimer = null;
 
-        suggestionsEl.querySelectorAll('.suggestion-item').forEach(item => {
-          item.addEventListener('click', () => selectPlace(item.dataset.placeId));
-        });
+        const searchInput = document.getElementById('shopSearch');
+        const suggestionsEl = document.getElementById('suggestions');
+        const selectedShopEl = document.getElementById('selectedShop');
+        const submitBtn = document.querySelector('#addForm button[type="submit"]');
 
-        suggestionsEl.style.display = 'block';
-      } catch (e) {
-        console.error('Autocomplete error:', e);
-      }
-    }
-
-    async function selectPlace(placeId) {
-      suggestionsEl.style.display = 'none';
-      searchInput.disabled = true;
-      searchInput.value = 'Loading details...';
-
-      try {
-        const res = await fetch('/api/places-autocomplete', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ placeId }),
-        });
-        const place = await res.json();
-
-        if (place.error) throw new Error(place.error);
-
-        // Populate hidden fields
-        document.getElementById('name').value = place.name;
-        document.getElementById('address').value = place.address;
-        document.getElementById('suburb').value = place.suburb;
-        document.getElementById('state').value = place.state;
-        document.getElementById('placeId').value = place.placeId;
-        document.getElementById('lat').value = place.lat;
-        document.getElementById('lng').value = place.lng;
-
-        // Show selected shop
-        document.getElementById('selectedName').textContent = place.name;
-        document.getElementById('selectedAddress').textContent = place.address;
-        selectedShopEl.style.display = 'flex';
-        searchInput.style.display = 'none';
-
-        // Enable submit
-        submitBtn.disabled = false;
-      } catch (e) {
-        console.error('Place details error:', e);
-        searchInput.value = '';
-        searchInput.disabled = false;
-        alert('Could not load place details. Try again or use the manual form below.');
-      }
-    }
-
-    // Clear selection
-    document.getElementById('clearSelection').addEventListener('click', () => {
-      selectedShopEl.style.display = 'none';
-      searchInput.style.display = 'block';
-      searchInput.disabled = false;
-      searchInput.value = '';
-      searchInput.focus();
-      submitBtn.disabled = true;
-      ['name', 'address', 'suburb', 'state', 'placeId', 'lat', 'lng'].forEach(id => {
-        document.getElementById(id).value = '';
-      });
-    });
-
-    // ── Photo resize ──────────────────────────────────────────────
-
-    document.getElementById('photo').addEventListener('change', async (e) => {
-      const file = e.target.files[0];
-      if (!file) return;
-      if (file.size > 5 * 1024 * 1024) {
-        alert('Photo too large (max 5MB).');
-        e.target.value = '';
-        return;
-      }
-      try {
-        resizedPhoto = await resizeImage(file, 1024, 0.8);
-        const preview = document.getElementById('photoPreview');
-        document.getElementById('previewImg').src = URL.createObjectURL(resizedPhoto);
-        preview.style.display = 'block';
-      } catch (err) {
-        alert('Error processing photo: ' + err.message);
-        e.target.value = '';
-      }
-    });
-
-    function resizeImage(file, maxWidth, quality) {
-      return new Promise((resolve, reject) => {
-        const canvas = document.createElement('canvas');
-        const ctx = canvas.getContext('2d');
-        const img = new Image();
-        img.onload = () => {
-          let { width, height } = img;
-          if (width > maxWidth) {
-            height = (height * maxWidth) / width;
-            width = maxWidth;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          ctx.drawImage(img, 0, 0, width, height);
-          canvas.toBlob(resolve, 'image/jpeg', quality);
-        };
-        img.onerror = () => reject(new Error('Failed to load image'));
-        img.src = URL.createObjectURL(file);
-      });
-    }
-
-    // ── Submit (autocomplete form) ──────────────────────────────
-
-    document.getElementById('addForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const form = e.target;
-      const btn = form.querySelector('button[type="submit"]');
-      const msg = document.getElementById('msg');
-      
-      if (!document.getElementById('name').value) {
-        msg.className = 'msg error';
-        msg.textContent = 'Please select a shop from the search results first.';
-        msg.style.display = 'block';
-        return;
-      }
-
-      btn.disabled = true;
-      btn.textContent = '🔄 Adding...';
-      msg.style.display = 'none';
-
-      const sauces = [...form.querySelectorAll('input[name="sauce"]:checked')]
-        .map(c => c.value).join(',');
-
-      const formData = new FormData();
-      formData.append('name', document.getElementById('name').value);
-      formData.append('address', document.getElementById('address').value);
-      formData.append('suburb', document.getElementById('suburb').value);
-      formData.append('state', document.getElementById('state').value);
-      formData.append('sauce_types', sauces || 'tomato');
-      formData.append('submitted_by', form.querySelector('#submittedBy').value.trim() || 'Anonymous legend');
-      
-      if (resizedPhoto) {
-        formData.append('photo', resizedPhoto, 'photo.jpg');
-      }
-
-      try {
-        const res = await fetch('/api/shops', { method: 'POST', body: formData });
-        const result = await res.json();
-        if (res.ok) {
-          msg.className = 'msg success';
-          msg.textContent = "🎉 You beauty! Shop added. It'll show up once we verify it.";
-          msg.style.display = 'block';
-          form.reset();
-          selectedShopEl.style.display = 'none';
-          searchInput.style.display = 'block';
-          searchInput.disabled = false;
-          searchInput.value = '';
-          document.getElementById('photoPreview').style.display = 'none';
-          resizedPhoto = null;
-          submitBtn.disabled = true;
-        } else {
-          throw new Error(result.error || 'Something went wrong');
+        function showSuggestions() {
+            suggestionsEl.classList.remove('hidden');
+            suggestionsEl.classList.add('block');
         }
-      } catch (err) {
-        msg.className = 'msg error';
-        msg.textContent = `❌ ${err.message}. Give it another crack.`;
-        msg.style.display = 'block';
-      }
-      btn.disabled = false;
-      btn.textContent = '🥫 Add to the Map';
-    });
-
-    // ── Submit (manual form) ──────────────────────────────────
-
-    document.getElementById('manualForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      const btn = e.target.querySelector('button[type="submit"]');
-      const msg = document.getElementById('manualMsg');
-
-      btn.disabled = true;
-      btn.textContent = '🔄 Adding...';
-      msg.style.display = 'none';
-
-      const sauces = [...e.target.querySelectorAll('input[name="manualSauce"]:checked')]
-        .map(c => c.value).join(',');
-
-      try {
-        const res = await fetch('/api/shops', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            name: document.getElementById('manualName').value.trim(),
-            address: document.getElementById('manualAddress').value.trim(),
-            suburb: document.getElementById('manualSuburb').value.trim(),
-            state: document.getElementById('manualState').value,
-            sauce_types: sauces || 'tomato',
-            submitted_by: document.getElementById('manualSubmittedBy').value.trim() || 'Anonymous legend',
-          }),
-        });
-        const result = await res.json();
-        if (res.ok) {
-          msg.className = 'msg success';
-          msg.textContent = "🎉 Shop added! It'll appear after verification.";
-          msg.style.display = 'block';
-          e.target.reset();
-        } else {
-          throw new Error(result.error || 'Something went wrong');
+        function hideSuggestions() {
+            suggestionsEl.classList.add('hidden');
+            suggestionsEl.classList.remove('block');
         }
-      } catch (err) {
-        msg.className = 'msg error';
-        msg.textContent = `❌ ${err.message}`;
-        msg.style.display = 'block';
-      }
-      btn.disabled = false;
-      btn.textContent = '🥫 Add Manually';
-    });
-  </script>
+        function showSelected() {
+            selectedShopEl.classList.remove('hidden');
+            selectedShopEl.classList.add('flex');
+        }
+        function hideSelected() {
+            selectedShopEl.classList.add('hidden');
+            selectedShopEl.classList.remove('flex');
+        }
+
+        searchInput.addEventListener('input', () => {
+            clearTimeout(debounceTimer);
+            const val = searchInput.value.trim();
+            if (val.length < 2) {
+                hideSuggestions();
+                return;
+            }
+            debounceTimer = setTimeout(() => fetchSuggestions(val), 300);
+        });
+
+        document.addEventListener('click', (e) => {
+            if (!e.target.closest('#shopSearch, #suggestions')) {
+                hideSuggestions();
+            }
+        });
+
+        function renderSuggestion(s) {
+            const item = document.createElement('div');
+            item.className =
+                'cursor-pointer border-b border-neutral-200 px-4 py-3 transition-colors last:border-b-0 hover:bg-primary/5';
+            item.dataset.placeId = s.placeId;
+
+            const main = document.createElement('div');
+            main.className = 'text-sm font-semibold';
+            main.textContent = s.mainText;
+
+            const secondary = document.createElement('div');
+            secondary.className = 'mt-0.5 text-xs opacity-60';
+            secondary.textContent = s.secondaryText;
+
+            item.appendChild(main);
+            item.appendChild(secondary);
+            return item;
+        }
+
+        async function fetchSuggestions(input) {
+            try {
+                const res = await fetch(
+                    `/api/places-autocomplete?input=${encodeURIComponent(input)}`
+                );
+                const data = await res.json();
+                if (!data.suggestions || data.suggestions.length === 0) {
+                    hideSuggestions();
+                    return;
+                }
+                suggestionsEl.replaceChildren();
+                data.suggestions.forEach((s) => {
+                    const item = renderSuggestion(s);
+                    item.addEventListener('click', () => selectPlace(s.placeId));
+                    suggestionsEl.appendChild(item);
+                });
+                showSuggestions();
+            } catch (e) {
+                console.error('Autocomplete error:', e);
+            }
+        }
+
+        async function selectPlace(placeId) {
+            hideSuggestions();
+            searchInput.disabled = true;
+            searchInput.value = 'Loading details...';
+
+            try {
+                const res = await fetch('/api/places-autocomplete', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ placeId }),
+                });
+                const place = await res.json();
+                if (place.error) throw new Error(place.error);
+
+                document.getElementById('name').value = place.name;
+                document.getElementById('address').value = place.address;
+                document.getElementById('suburb').value = place.suburb;
+                document.getElementById('state').value = place.state;
+                document.getElementById('placeId').value = place.placeId;
+                document.getElementById('lat').value = place.lat;
+                document.getElementById('lng').value = place.lng;
+
+                document.getElementById('selectedName').textContent = place.name;
+                document.getElementById('selectedAddress').textContent =
+                    place.address;
+                showSelected();
+                searchInput.style.display = 'none';
+                submitBtn.disabled = false;
+            } catch (e) {
+                console.error('Place details error:', e);
+                searchInput.value = '';
+                searchInput.disabled = false;
+                alert(
+                    'Could not load place details. Try again or use the manual form below.'
+                );
+            }
+        }
+
+        document
+            .getElementById('clearSelection')
+            .addEventListener('click', () => {
+                hideSelected();
+                searchInput.style.display = 'block';
+                searchInput.disabled = false;
+                searchInput.value = '';
+                searchInput.focus();
+                submitBtn.disabled = true;
+                ['name', 'address', 'suburb', 'state', 'placeId', 'lat', 'lng'].forEach(
+                    (id) => {
+                        document.getElementById(id).value = '';
+                    }
+                );
+            });
+
+        document.getElementById('photo').addEventListener('change', async (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+            if (file.size > 5 * 1024 * 1024) {
+                alert('Photo too large (max 5MB).');
+                e.target.value = '';
+                return;
+            }
+            try {
+                resizedPhoto = await resizeImage(file, 1024, 0.8);
+                const preview = document.getElementById('photoPreview');
+                document.getElementById('previewImg').src =
+                    URL.createObjectURL(resizedPhoto);
+                preview.classList.remove('hidden');
+                preview.classList.add('block');
+            } catch (err) {
+                alert('Error processing photo: ' + err.message);
+                e.target.value = '';
+            }
+        });
+
+        function resizeImage(file, maxWidth, quality) {
+            return new Promise((resolve, reject) => {
+                const canvas = document.createElement('canvas');
+                const ctx = canvas.getContext('2d');
+                const img = new Image();
+                img.onload = () => {
+                    let { width, height } = img;
+                    if (width > maxWidth) {
+                        height = (height * maxWidth) / width;
+                        width = maxWidth;
+                    }
+                    canvas.width = width;
+                    canvas.height = height;
+                    ctx.drawImage(img, 0, 0, width, height);
+                    canvas.toBlob(resolve, 'image/jpeg', quality);
+                };
+                img.onerror = () => reject(new Error('Failed to load image'));
+                img.src = URL.createObjectURL(file);
+            });
+        }
+
+        document
+            .getElementById('addForm')
+            .addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const form = e.target;
+                const btn = form.querySelector('button[type="submit"]');
+                const msg = document.getElementById('msg');
+
+                if (!document.getElementById('name').value) {
+                    setMsg(
+                        msg,
+                        'error',
+                        'Please select a shop from the search results first.'
+                    );
+                    return;
+                }
+
+                btn.disabled = true;
+                btn.textContent = '🔄 Adding...';
+                msg.style.display = 'none';
+
+                const sauces = [
+                    ...form.querySelectorAll('input[name="sauce"]:checked'),
+                ]
+                    .map((c) => c.value)
+                    .join(',');
+
+                const formData = new FormData();
+                formData.append('name', document.getElementById('name').value);
+                formData.append('address', document.getElementById('address').value);
+                formData.append('suburb', document.getElementById('suburb').value);
+                formData.append('state', document.getElementById('state').value);
+                formData.append('sauce_types', sauces || 'tomato');
+                formData.append(
+                    'submitted_by',
+                    form.querySelector('#submittedBy').value.trim() ||
+                        'Anonymous legend'
+                );
+
+                if (resizedPhoto) {
+                    formData.append('photo', resizedPhoto, 'photo.jpg');
+                }
+
+                try {
+                    const res = await fetch('/api/shops', {
+                        method: 'POST',
+                        body: formData,
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        setMsg(
+                            msg,
+                            'success',
+                            "🎉 You beauty! Shop added. It'll show up once we verify it."
+                        );
+                        form.reset();
+                        hideSelected();
+                        searchInput.style.display = 'block';
+                        searchInput.disabled = false;
+                        searchInput.value = '';
+                        const preview = document.getElementById('photoPreview');
+                        preview.classList.add('hidden');
+                        preview.classList.remove('block');
+                        resizedPhoto = null;
+                        submitBtn.disabled = true;
+                    } else {
+                        throw new Error(result.error || 'Something went wrong');
+                    }
+                } catch (err) {
+                    setMsg(msg, 'error', `❌ ${err.message}. Give it another crack.`);
+                }
+                btn.disabled = false;
+                btn.textContent = '🥫 Add to the Map';
+            });
+
+        document
+            .getElementById('manualForm')
+            .addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = e.target.querySelector('button[type="submit"]');
+                const msg = document.getElementById('manualMsg');
+
+                btn.disabled = true;
+                btn.textContent = '🔄 Adding...';
+                msg.style.display = 'none';
+
+                const sauces = [
+                    ...e.target.querySelectorAll(
+                        'input[name="manualSauce"]:checked'
+                    ),
+                ]
+                    .map((c) => c.value)
+                    .join(',');
+
+                try {
+                    const res = await fetch('/api/shops', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            name: document.getElementById('manualName').value.trim(),
+                            address: document
+                                .getElementById('manualAddress')
+                                .value.trim(),
+                            suburb: document
+                                .getElementById('manualSuburb')
+                                .value.trim(),
+                            state: document.getElementById('manualState').value,
+                            sauce_types: sauces || 'tomato',
+                            submitted_by:
+                                document
+                                    .getElementById('manualSubmittedBy')
+                                    .value.trim() || 'Anonymous legend',
+                        }),
+                    });
+                    const result = await res.json();
+                    if (res.ok) {
+                        setMsg(
+                            msg,
+                            'success',
+                            "🎉 Shop added! It'll appear after verification."
+                        );
+                        e.target.reset();
+                    } else {
+                        throw new Error(result.error || 'Something went wrong');
+                    }
+                } catch (err) {
+                    setMsg(msg, 'error', `❌ ${err.message}`);
+                }
+                btn.disabled = false;
+                btn.textContent = '🥫 Add Manually';
+            });
+    </script>
 </Layout>

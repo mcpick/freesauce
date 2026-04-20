@@ -1,0 +1,26 @@
+# Free Sauce
+
+> Crowdsourced map of Australian pie shops that do not charge for tomato sauce.
+
+## About
+
+Free Sauce tracks which pie shops across Australia include free tomato sauce with a pie — and which ones charge. Add a shop, vote on sauce status, and help fellow Aussies find free sauce near them.
+
+## Features
+
+- Interactive map of verified and unverified pie shops across Australia
+- Add a pie shop with Google Places autocomplete
+- Vote on whether a shop offers free sauce (email confirmation required)
+- Verified-only view toggle
+- Per-shop pages with vote totals, location, and photo
+
+## Routes
+
+- `/` — the sauce map
+- `/add` — add a new pie shop
+- `/shop/{slug}` — shop detail + voting
+
+## Related
+
+- Site: https://thefreesauce.quest
+- Sitemap: https://thefreesauce.quest/sitemap-index.xml

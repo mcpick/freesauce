@@ -3,331 +3,261 @@ import Layout from '../layouts/Layout.astro';
 ---
 
 <Layout title="Free Sauce — Find Free Sauce at Aussie Pie Shops 🥧">
-  <main>
-    <section class="hero">
-      <h1>FREE SAUCE<br/><span class="sub">AT EVERY PIE SHOP IN AUSTRALIA</span></h1>
-      <p class="tagline">Because charging for sauce on a pie is bloody un-Australian.</p>
-      <button id="nearMe" class="btn btn-gold">
-        📍 Free Sauce Near Me
-      </button>
-    </section>
+    <main>
+        <section
+            class="bg-gradient-to-br from-primary to-primary-dark px-6 pt-12 pb-8 text-center text-white"
+        >
+            <h1 class="text-[clamp(2rem,6vw,3.5rem)] leading-tight">
+                FREE SAUCE<br />
+                <span
+                    class="text-[clamp(0.9rem,2.5vw,1.3rem)] tracking-wider opacity-90"
+                >
+                    AT EVERY PIE SHOP IN AUSTRALIA
+                </span>
+            </h1>
+            <p class="mx-0 mt-4 mb-6 text-lg italic opacity-85">
+                Because charging for sauce on a pie is bloody un-Australian.
+            </p>
+            <button
+                id="nearMe"
+                class="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 font-bold text-ink transition hover:-translate-y-0.5 hover:bg-accent-muted disabled:opacity-60"
+            >
+                📍 Free Sauce Near Me
+            </button>
+        </section>
 
-    <section class="map-section">
-      <div class="map-header">
-        <h2>🗺️ The Sauce Map</h2>
-        <div class="stats" id="stats"></div>
-      </div>
-      <div id="map"></div>
-      <div class="legend">
-        <span class="legend-item"><span class="dot verified"></span> Verified</span>
-        <label class="legend-item toggle">
-          <input type="checkbox" id="showUnverified" />
-          <span class="dot unverified"></span> Show unverified
-        </label>
-      </div>
-    </section>
+        <section class="mx-auto max-w-[1200px] p-6">
+            <div
+                class="mb-4 flex flex-wrap items-center justify-between gap-2"
+            >
+                <h2 class="text-2xl text-ink">🗺️ The Sauce Map</h2>
+                <div
+                    id="stats"
+                    class="text-sm font-semibold text-primary"
+                ></div>
+            </div>
+            <div
+                id="map"
+                class="z-[1] h-[350px] rounded-2xl border-[3px] border-accent shadow-lg sm:h-[500px]"
+            ></div>
+            <div class="mt-3 flex gap-6 text-sm">
+                <span class="flex items-center gap-1.5">
+                    <span
+                        class="inline-block h-3 w-3 rounded-full bg-success"
+                    ></span>
+                    Verified
+                </span>
+                <label class="flex cursor-pointer items-center gap-1.5">
+                    <input type="checkbox" id="showUnverified" class="mr-0.5" />
+                    <span
+                        class="inline-block h-3 w-3 rounded-full bg-accent"
+                    ></span>
+                    Show unverified
+                </label>
+            </div>
+        </section>
 
-    <section class="cta">
-      <h2>Know a spot that does free sauce?</h2>
-      <p>Help your fellow Aussies out. Chuck it on the map.</p>
-      <a href="/add" class="btn btn-green">🥫 Add a Pie Shop</a>
-    </section>
+        <section class="bg-accent px-6 py-12 text-center">
+            <h2 class="mb-2 text-2xl text-ink">
+                Know a spot that does free sauce?
+            </h2>
+            <p class="mb-6 text-ink/85">
+                Help your fellow Aussies out. Chuck it on the map.
+            </p>
+            <a
+                href="/add"
+                class="inline-flex items-center gap-2 rounded-full bg-success px-6 py-3 font-bold text-white transition hover:-translate-y-0.5 hover:brightness-110"
+            >
+                🥫 Add a Pie Shop
+            </a>
+        </section>
+    </main>
 
-    <footer>
-      <p>Made with 🥧 and 🥫 for Australia</p>
-      <p class="small">A side quest by legends who reckon sauce should be free.</p>
-    </footer>
-  </main>
+    <script>
+        import L from 'leaflet';
 
-  <style>
-    .hero {
-      text-align: center;
-      padding: 3rem 1.5rem 2rem;
-      background: linear-gradient(135deg, var(--sauce-red) 0%, var(--sauce-dark) 100%);
-      color: white;
-    }
+        const map = L.map('map').setView([-25.5, 134], 4);
 
-    .hero h1 {
-      font-size: clamp(2rem, 6vw, 3.5rem);
-      line-height: 1.1;
-      margin-bottom: 0.5rem;
-    }
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '© OpenStreetMap contributors',
+            maxZoom: 18,
+        }).addTo(map);
 
-    .hero .sub {
-      font-size: clamp(0.9rem, 2.5vw, 1.3rem);
-      opacity: 0.9;
-      letter-spacing: 0.05em;
-    }
+        function timeAgo(dateString: string) {
+            const now = new Date();
+            const date = new Date(dateString);
+            const diffMs = now.getTime() - date.getTime();
+            const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+            const diffDays = Math.floor(diffHours / 24);
 
-    .hero .tagline {
-      font-size: 1.1rem;
-      opacity: 0.85;
-      margin: 1rem 0 1.5rem;
-      font-style: italic;
-    }
+            if (diffDays > 365) {
+                const years = Math.floor(diffDays / 365);
+                return `${years} year${years > 1 ? 's' : ''} ago`;
+            } else if (diffDays > 30) {
+                const months = Math.floor(diffDays / 30);
+                return `${months} month${months > 1 ? 's' : ''} ago`;
+            } else if (diffDays > 0) {
+                return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+            } else if (diffHours > 0) {
+                return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+            } else {
+                return 'Just now';
+            }
+        }
 
-    .map-section {
-      padding: 1.5rem;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
+        const sauceIcon = (verified: boolean) =>
+            L.divIcon({
+                className: 'sauce-marker',
+                html: `<div style="
+          background: ${verified ? '#00843D' : '#f39c12'};
+          width: 28px; height: 28px;
+          border-radius: 50%;
+          border: 3px solid white;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3);
+          display: flex; align-items: center; justify-content: center;
+          font-size: 14px;
+        ">🥫</div>`,
+                iconSize: [28, 28],
+                iconAnchor: [14, 14],
+                popupAnchor: [0, -16],
+            });
 
-    .map-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 1rem;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-    }
+        let showUnverified = false;
+        const verifiedMarkers: L.Marker[] = [];
+        const unverifiedMarkers: L.Marker[] = [];
 
-    .map-header h2 {
-      font-size: 1.5rem;
-      color: var(--meat);
-    }
+        async function loadShops() {
+            try {
+                const res = await fetch('/api/shops');
+                const shops = await res.json();
 
-    .stats {
-      font-size: 0.9rem;
-      color: var(--sauce-red);
-      font-weight: 600;
-    }
+                const verifiedCount = shops.filter(
+                    (s: { verified: boolean }) => s.verified
+                ).length;
+                const statsEl = document.getElementById('stats');
+                if (statsEl)
+                    statsEl.textContent = `${verifiedCount} verified sauce spots`;
 
-    #map {
-      height: 500px;
-      border-radius: 1rem;
-      border: 3px solid var(--pie-gold);
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      z-index: 1;
-    }
+                shops.forEach((shop: any) => {
+                    const sauces = shop.sauce_types
+                        ? shop.sauce_types
+                              .split(',')
+                              .map((s: string) => s.trim())
+                              .join(', ')
+                        : 'tomato';
 
-    .legend {
-      display: flex;
-      gap: 1.5rem;
-      margin-top: 0.75rem;
-      font-size: 0.85rem;
-    }
+                    const shopUrl = shop.slug ? `/shop/${shop.slug}` : '#';
+                    const voteCount =
+                        (shop.vote_up_count || 0) + (shop.vote_down_count || 0);
+                    const lastActivity = shop.last_activity
+                        ? timeAgo(shop.last_activity)
+                        : 'Recently added';
 
-    .legend-item {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .legend-item.toggle {
-      cursor: pointer;
-    }
-
-    .legend-item input[type="checkbox"] {
-      margin-right: 0.2rem;
-    }
-
-    .dot {
-      width: 12px;
-      height: 12px;
-      border-radius: 50%;
-      display: inline-block;
-    }
-
-    .dot.verified { background: var(--aussie-green); }
-    .dot.unverified { background: var(--pie-gold); }
-
-    .cta {
-      text-align: center;
-      padding: 3rem 1.5rem;
-      background: var(--pie-gold);
-    }
-
-    .cta h2 {
-      font-size: 1.6rem;
-      color: var(--meat);
-      margin-bottom: 0.5rem;
-    }
-
-    .cta p {
-      margin-bottom: 1.5rem;
-      color: var(--meat);
-      opacity: 0.85;
-    }
-
-    footer {
-      text-align: center;
-      padding: 2rem 1.5rem;
-      font-size: 0.9rem;
-      opacity: 0.7;
-    }
-
-    footer .small {
-      font-size: 0.8rem;
-      margin-top: 0.25rem;
-    }
-
-    @media (max-width: 600px) {
-      #map { height: 350px; }
-    }
-  </style>
-
-  <script is:inline src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-  <script is:inline>
-    const map = L.map('map').setView([-25.5, 134], 4);
-
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-      attribution: '© OpenStreetMap contributors',
-      maxZoom: 18,
-    }).addTo(map);
-
-    // Simple time ago function
-    function timeAgo(dateString) {
-      const now = new Date();
-      const date = new Date(dateString);
-      const diffMs = now.getTime() - date.getTime();
-      const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-      const diffDays = Math.floor(diffHours / 24);
-
-      if (diffDays > 365) {
-        const years = Math.floor(diffDays / 365);
-        return `${years} year${years > 1 ? 's' : ''} ago`;
-      } else if (diffDays > 30) {
-        const months = Math.floor(diffDays / 30);
-        return `${months} month${months > 1 ? 's' : ''} ago`;
-      } else if (diffDays > 0) {
-        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-      } else if (diffHours > 0) {
-        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-      } else {
-        return 'Just now';
-      }
-    }
-
-    const sauceIcon = (verified) => L.divIcon({
-      className: 'sauce-marker',
-      html: `<div style="
-        background: ${verified ? '#00843D' : '#f39c12'};
-        width: 28px; height: 28px;
-        border-radius: 50%;
-        border: 3px solid white;
-        box-shadow: 0 2px 6px rgba(0,0,0,0.3);
-        display: flex; align-items: center; justify-content: center;
-        font-size: 14px;
-      ">🥫</div>`,
-      iconSize: [28, 28],
-      iconAnchor: [14, 14],
-      popupAnchor: [0, -16],
-    });
-
-    let showUnverified = false;
-    const verifiedMarkers = [];
-    const unverifiedMarkers = [];
-
-    async function loadShops() {
-      try {
-        const res = await fetch('/api/shops');
-        const shops = await res.json();
-
-        // Update stats to show verified count
-        const verifiedCount = shops.filter(s => s.verified).length;
-        document.getElementById('stats').textContent = `${verifiedCount} verified sauce spots`;
-
-        shops.forEach(shop => {
-          const sauces = shop.sauce_types
-            ? shop.sauce_types.split(',').map(s => s.trim()).join(', ')
-            : 'tomato';
-
-          const shopUrl = shop.slug ? `/shop/${shop.slug}` : '#';
-          const voteCount = (shop.vote_up_count || 0) + (shop.vote_down_count || 0);
-          const lastActivity = shop.last_activity ? timeAgo(shop.last_activity) : 'Recently added';
-
-          const marker = L.marker([shop.lat, shop.lng], { icon: sauceIcon(shop.verified) })
-            .bindPopup(`
-              <div style="font-family:Inter,sans-serif;min-width:200px;">
-                <div style="margin-bottom:8px;">
-                  <strong style="font-size:1.05rem;">
-                    ${shop.slug ? `<a href="${shopUrl}" style="color:#dc3545;text-decoration:none;">${shop.name}</a>` : shop.name}
-                  </strong>
-                  ${shop.verified ? ' <span style="color:#00843D;">✅</span>' : ''}
-                </div>
-                
-                <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">${shop.address}</div>
-                
-                <div style="font-size:0.85rem;margin-bottom:6px;">🥫 ${sauces}</div>
-                
-                ${voteCount > 0 ? `
-                  <div style="font-size:0.85rem;margin-bottom:6px;">
-                    👍 ${shop.vote_up_count || 0} confirmed · 👎 ${shop.vote_down_count || 0} denied
-                  </div>
-                ` : ''}
-                
-                <div style="font-size:0.8rem;color:#999;">
-                  Updated ${lastActivity}
-                </div>
+                    const marker = L.marker([shop.lat, shop.lng], {
+                        icon: sauceIcon(shop.verified),
+                    }).bindPopup(`
+            <div style="font-family:Inter,sans-serif;min-width:200px;">
+              <div style="margin-bottom:8px;">
+                <strong style="font-size:1.05rem;">
+                  ${shop.slug ? `<a href="${shopUrl}" style="color:#c0392b;text-decoration:none;">${shop.name}</a>` : shop.name}
+                </strong>
+                ${shop.verified ? ' <span style="color:#00843D;">✅</span>' : ''}
               </div>
-            `);
+              <div style="font-size:0.85rem;color:#666;margin-bottom:8px;">${shop.address}</div>
+              <div style="font-size:0.85rem;margin-bottom:6px;">🥫 ${sauces}</div>
+              ${
+                  voteCount > 0
+                      ? `
+                <div style="font-size:0.85rem;margin-bottom:6px;">
+                  👍 ${shop.vote_up_count || 0} confirmed · 👎 ${shop.vote_down_count || 0} denied
+                </div>
+              `
+                      : ''
+              }
+              <div style="font-size:0.8rem;color:#999;">
+                Updated ${lastActivity}
+              </div>
+            </div>
+          `);
 
-          if (shop.verified) {
-            marker.addTo(map);
-            verifiedMarkers.push(marker);
-          } else {
-            unverifiedMarkers.push(marker);
-          }
+                    if (shop.verified) {
+                        marker.addTo(map);
+                        verifiedMarkers.push(marker);
+                    } else {
+                        unverifiedMarkers.push(marker);
+                    }
+                });
+
+                if (localStorage.getItem('showUnverified') === 'true') {
+                    const cb = document.getElementById(
+                        'showUnverified'
+                    ) as HTMLInputElement | null;
+                    if (cb) cb.checked = true;
+                    showUnverified = true;
+                    unverifiedMarkers.forEach((m) => m.addTo(map));
+                }
+            } catch (e) {
+                console.error('Failed to load shops:', e);
+            }
+        }
+
+        loadShops();
+
+        const showUnverifiedEl = document.getElementById(
+            'showUnverified'
+        ) as HTMLInputElement | null;
+        showUnverifiedEl?.addEventListener('change', (e) => {
+            showUnverified = (e.target as HTMLInputElement).checked;
+            unverifiedMarkers.forEach((m) => {
+                if (showUnverified) m.addTo(map);
+                else m.remove();
+            });
+            localStorage.setItem('showUnverified', String(showUnverified));
         });
 
-        // Load saved preference
-        if (localStorage.getItem('showUnverified') === 'true') {
-          document.getElementById('showUnverified').checked = true;
-          showUnverified = true;
-          unverifiedMarkers.forEach(m => m.addTo(map));
-        }
-      } catch (e) {
-        console.error('Failed to load shops:', e);
-      }
-    }
+        const nearMeBtn = document.getElementById(
+            'nearMe'
+        ) as HTMLButtonElement | null;
+        nearMeBtn?.addEventListener('click', () => {
+            if (!nearMeBtn) return;
+            nearMeBtn.textContent = '📍 Finding your sauce...';
+            nearMeBtn.disabled = true;
 
-    loadShops();
+            if (!navigator.geolocation) {
+                alert("Your browser doesn't support geolocation, mate.");
+                nearMeBtn.textContent = '📍 Free Sauce Near Me';
+                nearMeBtn.disabled = false;
+                return;
+            }
 
-    // Toggle handler for showing/hiding unverified shops
-    document.getElementById('showUnverified').addEventListener('change', (e) => {
-      showUnverified = e.target.checked;
-      unverifiedMarkers.forEach(m => {
-        if (showUnverified) {
-          m.addTo(map);
-        } else {
-          m.remove();
-        }
-      });
-      localStorage.setItem('showUnverified', showUnverified);
-    });
-
-    document.getElementById('nearMe').addEventListener('click', () => {
-      const btn = document.getElementById('nearMe');
-      btn.textContent = '📍 Finding your sauce...';
-      btn.disabled = true;
-
-      if (!navigator.geolocation) {
-        alert("Your browser doesn't support geolocation, mate.");
-        btn.textContent = '📍 Free Sauce Near Me';
-        btn.disabled = false;
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        (pos) => {
-          map.setView([pos.coords.latitude, pos.coords.longitude], 12);
-          L.marker([pos.coords.latitude, pos.coords.longitude], {
-            icon: L.divIcon({
-              className: 'you-marker',
-              html: '<div style="background:#3498db;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-              iconSize: [16, 16],
-              iconAnchor: [8, 8],
-            })
-          }).addTo(map).bindPopup('📍 You are here').openPopup();
-          btn.textContent = '📍 Free Sauce Near Me';
-          btn.disabled = false;
-        },
-        () => {
-          alert("Couldn't get your location. Check your permissions, legend.");
-          btn.textContent = '📍 Free Sauce Near Me';
-          btn.disabled = false;
-        }
-      );
-    });
-  </script>
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    map.setView(
+                        [pos.coords.latitude, pos.coords.longitude],
+                        12
+                    );
+                    L.marker([pos.coords.latitude, pos.coords.longitude], {
+                        icon: L.divIcon({
+                            className: 'you-marker',
+                            html: '<div style="background:#3498db;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+                            iconSize: [16, 16],
+                            iconAnchor: [8, 8],
+                        }),
+                    })
+                        .addTo(map)
+                        .bindPopup('📍 You are here')
+                        .openPopup();
+                    nearMeBtn.textContent = '📍 Free Sauce Near Me';
+                    nearMeBtn.disabled = false;
+                },
+                () => {
+                    alert(
+                        "Couldn't get your location. Check your permissions, legend."
+                    );
+                    nearMeBtn.textContent = '📍 Free Sauce Near Me';
+                    nearMeBtn.disabled = false;
+                }
+            );
+        });
+    </script>
 </Layout>

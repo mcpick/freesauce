@@ -1,29 +1,40 @@
 {
-  "name": "freesauce",
-  "type": "module",
-  "version": "0.0.1",
-  "engines": {
-    "node": ">=22.12.0"
-  },
-  "scripts": {
-    "dev": "astro dev",
-    "build": "astro build",
-    "preview": "astro preview",
-    "astro": "astro",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "wrangler d1 migrations apply freesauce-db --remote"
-  },
-  "dependencies": {
-    "@astrojs/check": "^0.9.8",
-    "@astrojs/cloudflare": "^13.1.2",
-    "@playwright/test": "^1.58.2",
-    "astro": "^6.0.6",
-    "drizzle-orm": "^0.45.2",
-    "leaflet": "^1.9.4",
-    "playwright": "^1.58.2",
-    "typescript": "^6.0.3"
-  },
-  "devDependencies": {
-    "drizzle-kit": "^0.31.10"
-  }
+    "name": "freesauce",
+    "version": "0.0.1",
+    "type": "module",
+    "scripts": {
+        "dev": "astro dev",
+        "build": "astro build",
+        "preview": "astro preview",
+        "astro": "astro",
+        "check": "astro check",
+        "fmt": "oxfmt",
+        "fmt:check": "oxfmt --check",
+        "og:build": "node scripts/gen-og.mjs",
+        "db:generate": "drizzle-kit generate",
+        "db:migrate": "wrangler d1 migrations apply freesauce-db --remote"
+    },
+    "dependencies": {
+        "@astrojs/check": "^0.9.8",
+        "@astrojs/cloudflare": "^13.1.2",
+        "@astrojs/sitemap": "^3.7.2",
+        "@playwright/test": "^1.58.2",
+        "@tailwindcss/vite": "^4.2.2",
+        "astro": "^6.0.6",
+        "clsx": "^2.1.1",
+        "drizzle-orm": "^0.45.2",
+        "leaflet": "^1.9.4",
+        "playwright": "^1.58.2",
+        "tailwind-merge": "^3.5.0",
+        "tailwindcss": "^4.2.2",
+        "typescript": "^6.0.3"
+    },
+    "devDependencies": {
+        "@types/leaflet": "^1.9.21",
+        "drizzle-kit": "^0.31.10",
+        "oxfmt": "^0.45.0"
+    },
+    "engines": {
+        "node": ">=22.12.0"
+    }
 }

@@ -3,6 +3,7 @@
 ## Before deploying, you'll need to:
 
 ### 1. Run Database Migration
+
 ```bash
 # Apply schema changes to D1 database
 npx wrangler d1 execute freesauce-db --file=./schema-v2.sql
@@ -17,6 +18,7 @@ npx wrangler d1 execute freesauce-db --file=./slug-migration.sql
 ```
 
 ### 2. Set Environment Secrets
+
 ```bash
 # Set Resend API key
 npx wrangler secret put RESEND_API_KEY
@@ -24,6 +26,7 @@ npx wrangler secret put RESEND_API_KEY
 ```
 
 ### 3. Verify R2 Bucket
+
 Ensure the R2 bucket `freesauce-images` exists in your Cloudflare account.
 
 ## What's New in V2
@@ -47,6 +50,7 @@ Ensure the R2 bucket `freesauce-images` exists in your Cloudflare account.
 ## Files Changed
 
 ### New Files
+
 - `src/pages/shop/[slug].astro` - Shop detail page
 - `src/pages/api/vote.ts` - Vote submission and confirmation
 - `src/pages/api/photo.ts` - Photo upload
@@ -56,6 +60,7 @@ Ensure the R2 bucket `freesauce-images` exists in your Cloudflare account.
 - `migrate-slugs.js` - Slug generation script
 
 ### Updated Files
+
 - `src/pages/index.astro` - Enhanced map with vote counts and shop links
 - `src/pages/add.astro` - Photo upload with client-side resize
 - `src/pages/api/shops.ts` - Now handles photos, generates slugs, returns vote data

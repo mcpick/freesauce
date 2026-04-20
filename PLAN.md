@@ -10,10 +10,10 @@ New: "we deliver free sauce bottles to participating venues" (active campaign)
 1. **Who supplies the sauce?** Brand partnership (e.g. Beerenberg, Masterfoods), fundraiser, or self-funded? Affects homepage messaging.
 2. **What does "participate" mean for a bakery?** Sign up and get sent bottles? Agree to stock sauce we provide?
 3. **Tracking — what do we need to know?**
-   - Which venues are participating vs. just listed?
-   - Who submitted/nominated a venue?
-   - Did the venue receive sauce? When?
-   - Is there a verification step (venue confirms they're in)?
+    - Which venues are participating vs. just listed?
+    - Who submitted/nominated a venue?
+    - Did the venue receive sauce? When?
+    - Is there a verification step (venue confirms they're in)?
 4. **Users submitting "I gave sauce here"** — general public dropping off bottles, or more structured?
 
 ## Proposed Data Model
@@ -39,20 +39,25 @@ deliveries (new) — tracks sauce drops
 ## Proposed Site Changes
 
 ### Homepage
+
 - Shift hero from "find free sauce" to campaign message — "Bringing free sauce back to Aussie pie shops"
 - Map stays but markers show participation status (participating / nominated / standard)
 - Stats update: "X venues participating, Y bottles delivered"
 
 ### New: Campaign signup flow (for venues)
+
 - Simple form: venue name, address, contact person, email
 - "Want free sauce at your shop? Sign up and we'll send you bottles"
 
 ### Update: Submit form
+
 Currently "add a pie shop" → split into two flows:
+
 - **Nominate a venue** (public): "Know a bakery that should join?"
 - **Log a delivery** (campaign participants): "Dropped off sauce? Log it here"
 
 ### New: Simple campaign dashboard
+
 - Maybe just a `/campaign` page
 - How many venues participating
 - Total bottles delivered

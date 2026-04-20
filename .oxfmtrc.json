@@ -1,0 +1,6 @@
+{
+    "$schema": "./node_modules/oxfmt/configuration_schema.json",
+    "singleQuote": true,
+    "tabWidth": 4,
+    "ignorePatterns": ["dist", ".astro", ".wrangler", "drizzle", "pnpm-lock.yaml", "public/og.png"]
+}

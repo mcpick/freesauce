@@ -5,654 +5,427 @@ import Layout from '../../layouts/Layout.astro';
 // @ts-ignore - cloudflare:workers is a CF runtime module
 import { env } from 'cloudflare:workers';
 
-// Get shop data from params
 const { slug } = Astro.params;
 
 if (!slug) {
-  return Astro.redirect('/');
+    return Astro.redirect('/');
 }
 
-// Fetch shop data on the server
 let shop = null;
 let error = null;
 
 try {
-  const db = env.DB;
-  shop = await db
-    .prepare(`
-      SELECT 
+    const db = env.DB;
+    shop = await db
+        .prepare(
+            `
+      SELECT
         s.id, s.name, s.address, s.lat, s.lng, s.sauce_types, s.verified, s.suburb, s.state, s.slug, s.photo_key, s.google_photo_key, s.google_place_id, s.created_at,
         COALESCE(up_votes.count, 0) as vote_up_count,
         COALESCE(down_votes.count, 0) as vote_down_count,
         COALESCE(
-          MAX(v.confirmed_at), 
+          MAX(v.confirmed_at),
           s.created_at
         ) as last_activity
       FROM shops s
       LEFT JOIN (
-        SELECT shop_id, COUNT(*) as count 
-        FROM votes 
-        WHERE vote = 'up' AND status = 'confirmed' 
+        SELECT shop_id, COUNT(*) as count
+        FROM votes
+        WHERE vote = 'up' AND status = 'confirmed'
         GROUP BY shop_id
       ) up_votes ON s.id = up_votes.shop_id
       LEFT JOIN (
-        SELECT shop_id, COUNT(*) as count 
-        FROM votes 
-        WHERE vote = 'down' AND status = 'confirmed' 
+        SELECT shop_id, COUNT(*) as count
+        FROM votes
+        WHERE vote = 'down' AND status = 'confirmed'
         GROUP BY shop_id
       ) down_votes ON s.id = down_votes.shop_id
       LEFT JOIN votes v ON s.id = v.shop_id AND v.status = 'confirmed'
       WHERE s.slug = ?
       GROUP BY s.id
-    `)
-    .bind(slug)
-    .first();
+    `
+        )
+        .bind(slug)
+        .first();
 
-  if (!shop) {
-    error = 'Shop not found';
-  }
+    if (!shop) {
+        error = 'Shop not found';
+    }
 } catch (e) {
-  error = 'Failed to load shop';
+    error = 'Failed to load shop';
 }
 
 if (error || !shop) {
-  return Astro.redirect('/');
+    return Astro.redirect('/');
 }
 
-// Fetch confirmed votes with comments
 let confirmations: any[] = [];
 try {
-  const db = env.DB;
-  const result = await db
-    .prepare(`SELECT vote, comment, confirmed_at FROM votes WHERE shop_id = ? AND status = 'confirmed' ORDER BY confirmed_at DESC LIMIT 50`)
-    .bind(shop.id)
-    .all();
-  confirmations = result.results || [];
+    const db = env.DB;
+    const result = await db
+        .prepare(
+            `SELECT vote, comment, confirmed_at FROM votes WHERE shop_id = ? AND status = 'confirmed' ORDER BY confirmed_at DESC LIMIT 50`
+        )
+        .bind(shop.id)
+        .all();
+    confirmations = result.results || [];
 } catch (_) {}
 
-// Check for voting success message
 const voted = Astro.url.searchParams.get('voted') === '1';
 
 function timeAgo(dateString: string): string {
-  const now = new Date();
-  const date = new Date(dateString);
-  const diffMs = now.getTime() - date.getTime();
-  const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
-  const diffDays = Math.floor(diffHours / 24);
+    const now = new Date();
+    const date = new Date(dateString);
+    const diffMs = now.getTime() - date.getTime();
+    const diffHours = Math.floor(diffMs / (1000 * 60 * 60));
+    const diffDays = Math.floor(diffHours / 24);
 
-  if (diffDays > 365) {
-    const years = Math.floor(diffDays / 365);
-    return `${years} year${years > 1 ? 's' : ''} ago`;
-  } else if (diffDays > 30) {
-    const months = Math.floor(diffDays / 30);
-    return `${months} month${months > 1 ? 's' : ''} ago`;
-  } else if (diffDays > 0) {
-    return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
-  } else if (diffHours > 0) {
-    return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
-  } else {
-    return 'Just now';
-  }
+    if (diffDays > 365) {
+        const years = Math.floor(diffDays / 365);
+        return `${years} year${years > 1 ? 's' : ''} ago`;
+    } else if (diffDays > 30) {
+        const months = Math.floor(diffDays / 30);
+        return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else if (diffDays > 0) {
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else if (diffHours > 0) {
+        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else {
+        return 'Just now';
+    }
 }
 ---
 
 <Layout title={`${shop.name} — Free Sauce`}>
-  <main class="shop-page">
-    {voted && (
-      <div class="voted-banner">
-        🎉 Confirmed! Thanks for keeping the sauce map accurate, legend.
-      </div>
-    )}
-
-    <div class="shop-header">
-      <div class="shop-photo">
-        {shop.photo_key ? (
-          <img 
-            src={`/api/photo/${encodeURIComponent(shop.photo_key)}`} 
-            alt={`Free sauce at ${shop.name}`} 
-            class="photo"
-          />
-        ) : shop.google_photo_key ? (
-          <img 
-            src={`/api/photo/${encodeURIComponent(shop.google_photo_key)}`} 
-            alt={shop.name} 
-            class="photo"
-          />
-        ) : (
-          <div class="photo-placeholder">
-            🥫<br />
-            <small>No photo yet</small>
-          </div>
-        )}
-      </div>
-      
-      <div class="shop-info">
-        <h1>
-          {shop.name}
-          {shop.verified && <span class="verified">✅</span>}
-        </h1>
-        
-        <p class="address">📍 {shop.address}</p>
-        
-        <div class="sauce-types">
-          {shop.sauce_types.split(',').map((sauce: string) => (
-            <span class="sauce-chip">{sauce.trim()}</span>
-          ))}
-        </div>
-        
-        <div class="stats">
-          <div class="votes">
-            <span class="vote-count up">👍 {shop.vote_up_count} confirmed</span>
-            <span class="vote-count down">👎 {shop.vote_down_count} denied</span>
-          </div>
-          <div class="last-updated">
-            Updated {timeAgo(shop.last_activity)}
-          </div>
-        </div>
-
-        {shop.google_place_id && (
-          <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.name + ' ' + shop.address)}&query_place_id=${shop.google_place_id}`} target="_blank" rel="noopener noreferrer" class="google-verified">
-            <svg viewBox="0 0 24 24" width="16" height="16" class="google-icon">
-              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"/>
-              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/>
-              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/>
-            </svg>
-            <span>Verified on Google</span>
-          </a>
-        )}
-      </div>
-    </div>
-
-    <div class="vote-section">
-      <h2>Does this shop offer free sauce?</h2>
-      <p>Been here recently? Let everyone know if the sauce is still flowing.</p>
-      
-      <form id="voteForm" class="vote-form">
-        <input type="hidden" name="shop_id" value={shop.id} />
-        
-        <div class="vote-buttons">
-          <button type="button" class="vote-btn" data-vote="up">
-            👍 <span>Yes — sauce is available</span>
-          </button>
-          <button type="button" class="vote-btn" data-vote="down">
-            👎 <span>No — couldn't find sauce</span>
-          </button>
-        </div>
-        
-        <div class="extra-fields" style="display: none;">
-          <div class="field">
-            <label for="comment">Comment <span class="optional">(optional)</span></label>
-            <textarea id="comment" name="comment" rows="2" placeholder="e.g. Tomato and BBQ on the counter, self-serve" maxlength="500"></textarea>
-          </div>
-          
-          <div class="field">
-            <label for="email">Email <span class="optional">(to verify you're a real person)</span></label>
-            <input type="email" id="email" name="email" placeholder="your@email.com" required />
-            <small>We'll send a quick confirmation link. No spam, promise.</small>
-          </div>
-          
-          <button type="submit" class="submit-vote">
-            Send Confirmation
-          </button>
-        </div>
-        
-        <div id="voteMsg" class="vote-msg" style="display: none;"></div>
-      </form>
-    </div>
-
-    {confirmations.length > 0 && (
-      <div class="confirmations-section">
-        <h2>Community Reports</h2>
-        <ul class="confirmations-list">
-          {confirmations.map((c: any) => (
-            <li class={`confirmation ${c.vote}`}>
-              <span class="confirmation-icon">{c.vote === 'up' ? '👍' : '👎'}</span>
-              <div class="confirmation-body">
-                {c.comment && <p class="confirmation-comment">{c.comment}</p>}
-                <span class="confirmation-time">{timeAgo(c.confirmed_at)}</span>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </div>
-    )}
-
-    <div class="back-link">
-      <a href="/">← Back to the map</a>
-    </div>
-  </main>
-
-  <style>
-    .shop-page {
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 1rem;
-    }
-
-    .voted-banner {
-      background: #d5f5e3;
-      color: #1e8449;
-      padding: 1rem;
-      border-radius: 0.5rem;
-      text-align: center;
-      margin-bottom: 1.5rem;
-      font-weight: 600;
-    }
-
-    .shop-header {
-      display: grid;
-      grid-template-columns: 200px 1fr;
-      gap: 1.5rem;
-      margin-bottom: 2rem;
-    }
-
-    .shop-photo {
-      aspect-ratio: 1;
-      border-radius: 0.75rem;
-      overflow: hidden;
-      background: #f8f9fa;
-    }
-
-    .photo {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-    }
-
-    .photo-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      font-size: 2rem;
-      color: #6c757d;
-      text-align: center;
-    }
-
-    .photo-placeholder small {
-      font-size: 0.8rem;
-      margin-top: 0.5rem;
-    }
-
-    .shop-info h1 {
-      font-size: 2rem;
-      color: var(--sauce-red);
-      margin: 0 0 1rem 0;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .verified {
-      font-size: 1.5rem;
-    }
-
-    .address {
-      font-size: 1.1rem;
-      margin: 0 0 1rem 0;
-      opacity: 0.8;
-    }
-
-    .sauce-types {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.5rem;
-      margin-bottom: 1rem;
-    }
-
-    .sauce-chip {
-      background: var(--sauce-red);
-      color: white;
-      padding: 0.25rem 0.75rem;
-      border-radius: 1rem;
-      font-size: 0.9rem;
-      font-weight: 600;
-    }
-
-    .stats {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .votes {
-      display: flex;
-      gap: 1rem;
-    }
-
-    .vote-count {
-      display: flex;
-      align-items: center;
-      gap: 0.25rem;
-      font-size: 1.1rem;
-      font-weight: 600;
-    }
-
-    .last-updated {
-      font-size: 0.9rem;
-      opacity: 0.7;
-    }
-
-    .google-verified {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.4rem;
-      margin-top: 0.75rem;
-      padding: 0.35rem 0.75rem;
-      background: #f0f7ff;
-      border: 1px solid #d2e3fc;
-      border-radius: 2rem;
-      font-size: 0.8rem;
-      font-weight: 600;
-      color: #1a73e8;
-      text-decoration: none;
-      transition: background 0.2s, border-color 0.2s;
-    }
-
-    .google-verified:hover {
-      background: #e0eeff;
-      border-color: #a8c7fa;
-    }
-
-    .google-icon {
-      flex-shrink: 0;
-    }
-
-    .vote-section {
-      background: #f8f9fa;
-      padding: 2rem;
-      border-radius: 0.75rem;
-      margin-bottom: 2rem;
-    }
-
-    .vote-section h2 {
-      margin: 0 0 0.5rem 0;
-      color: var(--sauce-red);
-    }
-
-    .vote-section p {
-      margin: 0 0 1.5rem 0;
-      opacity: 0.8;
-    }
-
-    .vote-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 1rem;
-      margin-bottom: 1rem;
-    }
-
-    .vote-btn {
-      padding: 1rem;
-      border: 2px solid #e9ecef;
-      border-radius: 0.5rem;
-      background: white;
-      cursor: pointer;
-      transition: all 0.2s;
-      font-size: 1rem;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .vote-btn:hover {
-      border-color: var(--sauce-red);
-      transform: translateY(-2px);
-    }
-
-    .vote-btn.selected {
-      border-color: var(--sauce-red);
-      background: var(--sauce-red);
-      color: white;
-    }
-
-    .extra-fields {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-    }
-
-    .field label {
-      display: block;
-      font-weight: 600;
-      margin-bottom: 0.5rem;
-    }
-
-    .optional {
-      font-weight: 400;
-      opacity: 0.6;
-      font-size: 0.85rem;
-    }
-
-    .field input,
-    .field textarea {
-      width: 100%;
-      padding: 0.75rem;
-      border: 2px solid #e9ecef;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      font-family: inherit;
-      box-sizing: border-box;
-    }
-
-    .field input:focus,
-    .field textarea:focus {
-      outline: none;
-      border-color: var(--sauce-red);
-    }
-
-    .field textarea {
-      resize: vertical;
-      min-height: 60px;
-    }
-
-    .field small {
-      display: block;
-      margin-top: 0.25rem;
-      font-size: 0.8rem;
-      opacity: 0.7;
-    }
-
-    .submit-vote {
-      background: var(--sauce-red);
-      color: white;
-      border: none;
-      padding: 0.75rem 1.5rem;
-      border-radius: 0.5rem;
-      font-size: 1rem;
-      font-weight: 600;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    .submit-vote:hover {
-      background: #c82333;
-    }
-
-    .vote-msg {
-      margin-top: 1rem;
-      padding: 0.75rem;
-      border-radius: 0.5rem;
-      font-weight: 600;
-    }
-
-    .vote-msg.success {
-      background: #d5f5e3;
-      color: #1e8449;
-    }
-
-    .vote-msg.error {
-      background: #fadbd8;
-      color: #922b21;
-    }
-
-    .confirmations-section {
-      margin-bottom: 2rem;
-    }
-
-    .confirmations-section h2 {
-      font-size: 1.3rem;
-      color: var(--meat, #3d2c2c);
-      margin: 0 0 1rem 0;
-    }
-
-    .confirmations-list {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-      display: flex;
-      flex-direction: column;
-      gap: 0.75rem;
-    }
-
-    .confirmation {
-      display: flex;
-      align-items: flex-start;
-      gap: 0.75rem;
-      padding: 0.75rem 1rem;
-      background: #f8f9fa;
-      border-radius: 0.5rem;
-      border-left: 3px solid #e9ecef;
-    }
-
-    .confirmation.up {
-      border-left-color: var(--aussie-green, #00843D);
-    }
-
-    .confirmation.down {
-      border-left-color: var(--sauce-red, #dc3545);
-    }
-
-    .confirmation-icon {
-      font-size: 1.2rem;
-      flex-shrink: 0;
-    }
-
-    .confirmation-body {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .confirmation-comment {
-      margin: 0 0 0.25rem 0;
-      font-size: 0.95rem;
-      line-height: 1.4;
-    }
-
-    .confirmation-time {
-      font-size: 0.8rem;
-      opacity: 0.6;
-    }
-
-    .back-link {
-      text-align: center;
-    }
-
-    .back-link a {
-      color: var(--sauce-red);
-      text-decoration: none;
-      font-weight: 600;
-    }
-
-    .back-link a:hover {
-      text-decoration: underline;
-    }
-
-    @media (max-width: 600px) {
-      .shop-header {
-        grid-template-columns: 1fr;
-        gap: 1rem;
-      }
-
-      .vote-buttons {
-        grid-template-columns: 1fr;
-      }
-
-      .shop-info h1 {
-        font-size: 1.5rem;
-      }
-
-      .stats {
-        flex-direction: column;
-        align-items: flex-start;
-        gap: 0.5rem;
-      }
-    }
-  </style>
-
-  <script is:inline>
-    let selectedVote = null;
-
-    // Handle vote button selection
-    document.querySelectorAll('.vote-btn').forEach(btn => {
-      btn.addEventListener('click', (e) => {
-        const vote = e.currentTarget.dataset.vote;
-        
-        // Remove previous selection
-        document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
-        
-        // Select current button
-        e.currentTarget.classList.add('selected');
-        selectedVote = vote;
-        
-        // Show extra fields
-        document.querySelector('.extra-fields').style.display = 'flex';
-      });
-    });
-
-    // Handle form submission
-    document.getElementById('voteForm').addEventListener('submit', async (e) => {
-      e.preventDefault();
-      
-      if (!selectedVote) return;
-      
-      const form = e.target;
-      const btn = form.querySelector('.submit-vote');
-      const msg = document.getElementById('voteMsg');
-      
-      btn.disabled = true;
-      btn.textContent = 'Sending...';
-      msg.style.display = 'none';
-      
-      const data = {
-        shop_id: parseInt(form.querySelector('[name="shop_id"]').value),
-        email: form.querySelector('#email').value.trim(),
-        vote: selectedVote,
-        comment: form.querySelector('#comment').value.trim() || null
-      };
-      
-      try {
-        const res = await fetch('/api/vote', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data)
-        });
-        
-        const result = await res.json();
-        
-        if (res.ok) {
-          msg.className = 'vote-msg success';
-          msg.textContent = '📧 Check your email to confirm!';
-          msg.style.display = 'block';
-          form.reset();
-          selectedVote = null;
-          document.querySelectorAll('.vote-btn').forEach(b => b.classList.remove('selected'));
-          document.querySelector('.extra-fields').style.display = 'none';
-        } else {
-          throw new Error(result.error || 'Something went wrong');
+    <main class="mx-auto max-w-[800px] p-4">
+        {
+            voted && (
+                <div class="mb-6 rounded-lg bg-success/20 p-4 text-center font-semibold text-[oklch(0.42_0.14_150)]">
+                    🎉 Confirmed! Thanks for keeping the sauce map accurate,
+                    legend.
+                </div>
+            )
         }
-      } catch (err) {
-        msg.className = 'vote-msg error';
-        msg.textContent = `❌ ${err.message}`;
-        msg.style.display = 'block';
-      }
-      
-      btn.disabled = false;
-      btn.textContent = 'Send Confirmation';
-    });
-  </script>
+
+        <div class="mb-8 grid grid-cols-1 gap-6 sm:grid-cols-[200px_1fr]">
+            <div class="aspect-square overflow-hidden rounded-xl bg-neutral-100">
+                {
+                    shop.photo_key ? (
+                        <img
+                            src={`/api/photo/${encodeURIComponent(shop.photo_key)}`}
+                            alt={`Free sauce at ${shop.name}`}
+                            class="h-full w-full object-cover"
+                        />
+                    ) : shop.google_photo_key ? (
+                        <img
+                            src={`/api/photo/${encodeURIComponent(shop.google_photo_key)}`}
+                            alt={shop.name}
+                            class="h-full w-full object-cover"
+                        />
+                    ) : (
+                        <div class="flex h-full w-full flex-col items-center justify-center text-center text-3xl text-neutral-500">
+                            🥫
+                            <small class="mt-2 text-xs">No photo yet</small>
+                        </div>
+                    )
+                }
+            </div>
+
+            <div>
+                <h1
+                    class="mb-4 flex items-center gap-2 text-2xl text-primary sm:text-3xl"
+                >
+                    {shop.name}
+                    {shop.verified && <span class="text-2xl">✅</span>}
+                </h1>
+
+                <p class="mb-4 text-lg opacity-80">📍 {shop.address}</p>
+
+                <div class="mb-4 flex flex-wrap gap-2">
+                    {
+                        shop.sauce_types
+                            .split(',')
+                            .map((sauce: string) => (
+                                <span class="rounded-full bg-primary px-3 py-1 text-sm font-semibold text-white">
+                                    {sauce.trim()}
+                                </span>
+                            ))
+                    }
+                </div>
+
+                <div class="flex flex-col items-start gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex gap-4">
+                        <span
+                            class="flex items-center gap-1 text-base font-semibold"
+                        >
+                            👍 {shop.vote_up_count} confirmed
+                        </span>
+                        <span
+                            class="flex items-center gap-1 text-base font-semibold"
+                        >
+                            👎 {shop.vote_down_count} denied
+                        </span>
+                    </div>
+                    <div class="text-sm opacity-70">
+                        Updated {timeAgo(shop.last_activity)}
+                    </div>
+                </div>
+
+                {
+                    shop.google_place_id && (
+                        <a
+                            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(shop.name + ' ' + shop.address)}&query_place_id=${shop.google_place_id}`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            class="mt-3 inline-flex items-center gap-1.5 rounded-full border border-blue-200 bg-blue-50 px-3 py-1.5 text-xs font-semibold text-blue-700 transition hover:border-blue-300 hover:bg-blue-100"
+                        >
+                            <svg
+                                viewBox="0 0 24 24"
+                                width="16"
+                                height="16"
+                                class="shrink-0"
+                            >
+                                <path
+                                    fill="#4285F4"
+                                    d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.1z"
+                                />
+                                <path
+                                    fill="#34A853"
+                                    d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+                                />
+                                <path
+                                    fill="#FBBC05"
+                                    d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"
+                                />
+                                <path
+                                    fill="#EA4335"
+                                    d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+                                />
+                            </svg>
+                            <span>Verified on Google</span>
+                        </a>
+                    )
+                }
+            </div>
+        </div>
+
+        <div class="mb-8 rounded-xl bg-neutral-50 p-8">
+            <h2 class="mb-2 text-xl text-primary">
+                Does this shop offer free sauce?
+            </h2>
+            <p class="mb-6 opacity-80">
+                Been here recently? Let everyone know if the sauce is still
+                flowing.
+            </p>
+
+            <form id="voteForm">
+                <input type="hidden" name="shop_id" value={shop.id} />
+
+                <div
+                    class="mb-4 grid grid-cols-1 gap-4 sm:grid-cols-2"
+                    id="voteButtons"
+                >
+                    <button
+                        type="button"
+                        class="vote-btn flex flex-col items-center gap-2 rounded-lg border-2 border-neutral-200 bg-white p-4 text-base transition hover:-translate-y-0.5 hover:border-primary"
+                        data-vote="up"
+                    >
+                        👍 <span>Yes — sauce is available</span>
+                    </button>
+                    <button
+                        type="button"
+                        class="vote-btn flex flex-col items-center gap-2 rounded-lg border-2 border-neutral-200 bg-white p-4 text-base transition hover:-translate-y-0.5 hover:border-primary"
+                        data-vote="down"
+                    >
+                        👎 <span>No — couldn't find sauce</span>
+                    </button>
+                </div>
+
+                <div id="extraFields" class="hidden flex-col gap-4">
+                    <div>
+                        <label
+                            for="comment"
+                            class="mb-2 block font-semibold"
+                        >
+                            Comment
+                            <span class="text-sm font-normal opacity-60">
+                                (optional)
+                            </span>
+                        </label>
+                        <textarea
+                            id="comment"
+                            name="comment"
+                            rows="2"
+                            placeholder="e.g. Tomato and BBQ on the counter, self-serve"
+                            maxlength="500"
+                            class="min-h-[60px] w-full resize-y rounded-lg border-2 border-neutral-200 p-3 text-base focus:border-primary focus:outline-none"
+                        ></textarea>
+                    </div>
+
+                    <div>
+                        <label for="email" class="mb-2 block font-semibold">
+                            Email
+                            <span class="text-sm font-normal opacity-60">
+                                (to verify you're a real person)
+                            </span>
+                        </label>
+                        <input
+                            type="email"
+                            id="email"
+                            name="email"
+                            placeholder="your@email.com"
+                            required
+                            class="w-full rounded-lg border-2 border-neutral-200 p-3 text-base focus:border-primary focus:outline-none"
+                        />
+                        <small class="mt-1 block text-xs opacity-70">
+                            We'll send a quick confirmation link. No spam,
+                            promise.
+                        </small>
+                    </div>
+
+                    <button
+                        type="submit"
+                        class="submit-vote rounded-lg bg-primary px-6 py-3 font-semibold text-white transition hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
+                    >
+                        Send Confirmation
+                    </button>
+                </div>
+
+                <div
+                    id="voteMsg"
+                    class="mt-4 hidden rounded-lg p-3 font-semibold"
+                >
+                </div>
+            </form>
+        </div>
+
+        {
+            confirmations.length > 0 && (
+                <div class="mb-8">
+                    <h2 class="mb-4 text-lg text-ink">Community Reports</h2>
+                    <ul class="flex list-none flex-col gap-3 p-0">
+                        {confirmations.map((c: any) => (
+                            <li
+                                class={`flex items-start gap-3 rounded-lg bg-neutral-50 p-3 ${
+                                    c.vote === 'up'
+                                        ? 'border-l-[3px] border-success'
+                                        : 'border-l-[3px] border-primary'
+                                }`}
+                            >
+                                <span class="shrink-0 text-lg">
+                                    {c.vote === 'up' ? '👍' : '👎'}
+                                </span>
+                                <div class="min-w-0 flex-1">
+                                    {c.comment && (
+                                        <p class="mb-1 text-sm leading-snug">
+                                            {c.comment}
+                                        </p>
+                                    )}
+                                    <span class="text-xs opacity-60">
+                                        {timeAgo(c.confirmed_at)}
+                                    </span>
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                </div>
+            )
+        }
+
+        <div class="text-center">
+            <a
+                href="/"
+                class="font-semibold text-primary hover:underline"
+            >
+                ← Back to the map
+            </a>
+        </div>
+    </main>
+
+    <script is:inline>
+        let selectedVote = null;
+
+        document.querySelectorAll('.vote-btn').forEach((btn) => {
+            btn.addEventListener('click', (e) => {
+                const vote = e.currentTarget.dataset.vote;
+                document.querySelectorAll('.vote-btn').forEach((b) => {
+                    b.classList.remove('bg-primary', 'text-white', 'border-primary');
+                    b.classList.add('bg-white', 'border-neutral-200');
+                });
+                e.currentTarget.classList.remove('bg-white', 'border-neutral-200');
+                e.currentTarget.classList.add(
+                    'bg-primary',
+                    'text-white',
+                    'border-primary'
+                );
+                selectedVote = vote;
+                const extra = document.getElementById('extraFields');
+                extra.classList.remove('hidden');
+                extra.classList.add('flex');
+            });
+        });
+
+        document.getElementById('voteForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!selectedVote) return;
+
+            const form = e.target;
+            const btn = form.querySelector('.submit-vote');
+            const msg = document.getElementById('voteMsg');
+
+            const MSG_SUCCESS =
+                'mt-4 rounded-lg p-3 font-semibold bg-success/20 text-[oklch(0.42_0.14_150)]';
+            const MSG_ERROR =
+                'mt-4 rounded-lg p-3 font-semibold bg-primary/15 text-primary-dark';
+
+            btn.disabled = true;
+            btn.textContent = 'Sending...';
+            msg.style.display = 'none';
+
+            const data = {
+                shop_id: parseInt(form.querySelector('[name="shop_id"]').value),
+                email: form.querySelector('#email').value.trim(),
+                vote: selectedVote,
+                comment: form.querySelector('#comment').value.trim() || null,
+            };
+
+            try {
+                const res = await fetch('/api/vote', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data),
+                });
+
+                const result = await res.json();
+
+                if (res.ok) {
+                    msg.className = MSG_SUCCESS;
+                    msg.textContent = '📧 Check your email to confirm!';
+                    msg.style.display = 'block';
+                    form.reset();
+                    selectedVote = null;
+                    document.querySelectorAll('.vote-btn').forEach((b) => {
+                        b.classList.remove(
+                            'bg-primary',
+                            'text-white',
+                            'border-primary'
+                        );
+                        b.classList.add('bg-white', 'border-neutral-200');
+                    });
+                    const extra = document.getElementById('extraFields');
+                    extra.classList.add('hidden');
+                    extra.classList.remove('flex');
+                } else {
+                    throw new Error(result.error || 'Something went wrong');
+                }
+            } catch (err) {
+                msg.className = MSG_ERROR;
+                msg.textContent = `❌ ${err.message}`;
+                msg.style.display = 'block';
+            }
+
+            btn.disabled = false;
+            btn.textContent = 'Send Confirmation';
+        });
+    </script>
 </Layout>

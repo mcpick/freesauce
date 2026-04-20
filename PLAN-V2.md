@@ -10,9 +10,11 @@
 - Map popup links to the detail page
 
 **Schema change — add slug to shops:**
+
 ```sql
 ALTER TABLE shops ADD COLUMN slug TEXT UNIQUE;
 ```
+
 Generate slugs for existing entries via migration script.
 
 ### 2. Photo Upload on Add Form
@@ -23,18 +25,20 @@ Generate slugs for existing entries via migration script.
 - **Client-side:** Validate max 5MB before upload
 - **Client-side resize:** Canvas API — resize to max 1024px wide, JPEG at 80% quality before upload. Keeps upload small and avoids Workers image processing costs.
 - **Backend (Workers):**
-  - Accept multipart form data (already resized)
-  - Validate max 2MB after resize
-  - Upload to R2 bucket `freesauce-images`
-  - Store R2 key in shops table as `photo_key`
+    - Accept multipart form data (already resized)
+    - Validate max 2MB after resize
+    - Upload to R2 bucket `freesauce-images`
+    - Store R2 key in shops table as `photo_key`
 - **Serving:** Public R2 bucket or presigned URL, served at `/api/photo/[key]`
 
 **Schema change:**
+
 ```sql
 ALTER TABLE shops ADD COLUMN photo_key TEXT;
 ```
 
 **R2 setup:**
+
 - Bucket: `freesauce-images` (Mcpickle account)
 - Binding: `IMAGES` in wrangler.toml
 - Image path convention: `shops/{shop_id}/{timestamp}.jpg`
@@ -42,6 +46,7 @@ ALTER TABLE shops ADD COLUMN photo_key TEXT;
 ### 3. Vote System (Thumbs Up/Down with Email Confirmation)
 
 **Flow:**
+
 1. User visits `/shop/[slug]`
 2. Clicks 👍 or 👎
 3. Enters email address
@@ -53,6 +58,7 @@ ALTER TABLE shops ADD COLUMN photo_key TEXT;
 **One vote per email per shop.** If same email votes again on same shop, update existing vote (requires re-confirmation).
 
 **Schema — new votes table:**
+
 ```sql
 CREATE TABLE votes (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -71,6 +77,7 @@ CREATE INDEX idx_votes_token ON votes(token);
 ```
 
 **Email:**
+
 - From: Resend (same setup as other projects)
 - Template: Simple — "Confirm your vote for {shop_name}" with a link to `/api/vote/confirm?token={token}`
 - From address: TBD (e.g. `freesauce@updates.mcpickle.com.au`)
@@ -78,11 +85,11 @@ CREATE INDEX idx_votes_token ON votes(token);
 ### 4. Map Updates
 
 - Popup now includes:
-  - Shop name (linked to `/shop/[slug]`)
-  - 👍 X / 👎 Y (confirmed vote counts)
-  - "Updated 3 days ago" (relative time from latest activity: vote or creation)
-  - Sauce types
-  - Verified badge if applicable
+    - Shop name (linked to `/shop/[slug]`)
+    - 👍 X / 👎 Y (confirmed vote counts)
+    - "Updated 3 days ago" (relative time from latest activity: vote or creation)
+    - Sauce types
+    - Verified badge if applicable
 - Relative time calculated client-side (no library needed — simple function)
 
 ### 5. Shop Detail Page Content
@@ -104,19 +111,20 @@ CREATE INDEX idx_votes_token ON votes(token);
 
 ## API Endpoints
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/api/shops` | All shops (existing, add vote counts + slug) |
-| GET | `/api/shops/[slug]` | Single shop detail with votes |
-| POST | `/api/shops` | Create shop (existing, update for photo + slug) |
-| POST | `/api/photo/upload` | Upload + resize photo, return key |
-| GET | `/api/photo/[key]` | Serve photo from R2 |
-| POST | `/api/vote` | Submit vote (creates pending, sends email) |
-| GET | `/api/vote/confirm` | Confirm vote via token |
+| Method | Path                | Description                                     |
+| ------ | ------------------- | ----------------------------------------------- |
+| GET    | `/api/shops`        | All shops (existing, add vote counts + slug)    |
+| GET    | `/api/shops/[slug]` | Single shop detail with votes                   |
+| POST   | `/api/shops`        | Create shop (existing, update for photo + slug) |
+| POST   | `/api/photo/upload` | Upload + resize photo, return key               |
+| GET    | `/api/photo/[key]`  | Serve photo from R2                             |
+| POST   | `/api/vote`         | Submit vote (creates pending, sends email)      |
+| GET    | `/api/vote/confirm` | Confirm vote via token                          |
 
 ## File Changes
 
 ### New files
+
 - `src/pages/shop/[slug].astro` — shop detail page
 - `src/pages/api/vote.ts` — POST vote, GET confirm
 - `src/pages/api/photo.ts` — upload endpoint
@@ -124,6 +132,7 @@ CREATE INDEX idx_votes_token ON votes(token);
 - `schema-v2.sql` — migration
 
 ### Modified files
+
 - `src/pages/index.astro` — map popups link to shop page, show votes + relative time
 - `src/pages/add.astro` — add photo upload field
 - `src/pages/api/shops.ts` — return slugs + vote counts, generate slug on create
@@ -133,11 +142,11 @@ CREATE INDEX idx_votes_token ON votes(token);
 
 1. Create R2 bucket: `freesauce-images`
 2. Add wrangler bindings:
-   ```toml
-   [[r2_buckets]]
-   binding = "IMAGES"
-   bucket_name = "freesauce-images"
-   ```
+    ```toml
+    [[r2_buckets]]
+    binding = "IMAGES"
+    bucket_name = "freesauce-images"
+    ```
 3. Set Resend API key as secret: `wrangler secret put RESEND_API_KEY`
 4. Add vars for from email in wrangler.toml
 5. Run schema migration on D1

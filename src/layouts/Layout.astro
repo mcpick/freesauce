@@ -1,136 +1,98 @@
 ---
+import { ClientRouter } from 'astro:transitions';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import '../styles/global.css';
+import 'leaflet/dist/leaflet.css';
+
 interface Props {
-  title: string;
-  description?: string;
+    title: string;
+    description?: string;
+    ogImage?: string;
 }
 
-const { title, description = "Find free sauce at pie shops across Australia 🇦🇺🥧" } = Astro.props;
+const {
+    title,
+    description = 'Find free sauce at pie shops across Australia 🇦🇺🥧',
+    ogImage = '/og.png',
+} = Astro.props;
+
+const siteUrl = Astro.site ?? new URL('https://thefreesauce.quest');
+const canonicalUrl = new URL(Astro.url.pathname, siteUrl);
+const absoluteOgImage = new URL(ogImage, siteUrl).toString();
+
+const jsonLd = {
+    '@context': 'https://schema.org',
+    '@graph': [
+        {
+            '@type': 'Organization',
+            '@id': `${siteUrl.origin}/#organization`,
+            name: 'Free Sauce',
+            url: siteUrl.origin,
+            logo: `${siteUrl.origin}/favicon.svg`,
+        },
+        {
+            '@type': 'WebSite',
+            '@id': `${siteUrl.origin}/#website`,
+            url: siteUrl.origin,
+            name: 'Free Sauce',
+            description: 'Find free sauce at pie shops across Australia.',
+            publisher: { '@id': `${siteUrl.origin}/#organization` },
+            potentialAction: {
+                '@type': 'SearchAction',
+                target: {
+                    '@type': 'EntryPoint',
+                    urlTemplate: `${siteUrl.origin}/?q={search_term_string}`,
+                },
+                'query-input': 'required name=search_term_string',
+            },
+        },
+    ],
+};
 ---
 
 <!doctype html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content={description} />
-    <title>{title}</title>
-    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-    <style is:global>
-      @import url('https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700&display=swap');
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <meta name="description" content={description} />
+        <link rel="canonical" href={canonicalUrl} />
 
-      :root {
-        --sauce-red: #c0392b;
-        --sauce-dark: #922b21;
-        --pie-gold: #f39c12;
-        --pie-crust: #d4a04a;
-        --pastry: #fef3e2;
-        --meat: #5d3a1a;
-        --green: #27ae60;
-        --aussie-green: #00843D;
-        --aussie-gold: #FFCD00;
-      }
+        <meta property="og:type" content="website" />
+        <meta property="og:title" content={title} />
+        <meta property="og:description" content={description} />
+        <meta property="og:url" content={canonicalUrl} />
+        <meta property="og:image" content={absoluteOgImage} />
+        <meta property="og:site_name" content="Free Sauce" />
 
-      * { margin: 0; padding: 0; box-sizing: border-box; }
+        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:title" content={title} />
+        <meta name="twitter:description" content={description} />
+        <meta name="twitter:image" content={absoluteOgImage} />
 
-      body {
-        font-family: 'Inter', sans-serif;
-        background: var(--pastry);
-        color: var(--meat);
-        min-height: 100vh;
-      }
+        <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
 
-      h1, h2, h3 {
-        font-family: 'Lilita One', cursive;
-      }
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+        <link
+            rel="stylesheet"
+            href="https://fonts.googleapis.com/css2?family=Lilita+One&family=Inter:wght@400;600;700&display=swap"
+        />
 
-      .nav {
-        background: var(--sauce-red);
-        padding: 0.75rem 1.5rem;
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
-        position: sticky;
-        top: 0;
-        z-index: 1000;
-      }
+        <title>{title}</title>
 
-      .nav a {
-        color: white;
-        text-decoration: none;
-        font-weight: 700;
-        font-size: 0.95rem;
-        transition: opacity 0.2s;
-      }
+        <script
+            is:inline
+            type="application/ld+json"
+            set:html={JSON.stringify(jsonLd)}
+        />
 
-      .nav a:hover { opacity: 0.8; }
-
-      .nav .logo {
-        font-family: 'Lilita One', cursive;
-        font-size: 1.4rem;
-        display: flex;
-        align-items: center;
-        gap: 0.5rem;
-      }
-
-      .nav .links {
-        display: flex;
-        gap: 1.5rem;
-        align-items: center;
-      }
-
-      .btn {
-        display: inline-flex;
-        align-items: center;
-        gap: 0.5rem;
-        padding: 0.6rem 1.2rem;
-        border: none;
-        border-radius: 2rem;
-        font-weight: 700;
-        font-size: 0.95rem;
-        cursor: pointer;
-        transition: all 0.2s;
-        text-decoration: none;
-        font-family: 'Inter', sans-serif;
-      }
-
-      .btn-sauce {
-        background: var(--sauce-red);
-        color: white;
-      }
-      .btn-sauce:hover {
-        background: var(--sauce-dark);
-        transform: translateY(-1px);
-      }
-
-      .btn-gold {
-        background: var(--pie-gold);
-        color: var(--meat);
-      }
-      .btn-gold:hover {
-        background: var(--pie-crust);
-        transform: translateY(-1px);
-      }
-
-      .btn-green {
-        background: var(--aussie-green);
-        color: white;
-      }
-      .btn-green:hover {
-        background: #006b31;
-        transform: translateY(-1px);
-      }
-    </style>
-  </head>
-  <body>
-    <nav class="nav">
-      <a href="/" class="logo">🥧 FREE SAUCE</a>
-      <div class="links">
-        <a href="/">Map</a>
-        <a href="/add">Add a Shop</a>
-      </div>
-    </nav>
-    <slot />
-  </body>
+        <ClientRouter />
+    </head>
+    <body>
+        <Header />
+        <slot />
+        <Footer />
+    </body>
 </html>
