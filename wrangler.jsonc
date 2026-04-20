@@ -1,0 +1,36 @@
+{
+  "name": "freesauce",
+  // main set by astro build output
+  "compatibility_date": "2024-12-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "assets": {
+    "directory": "./dist/client"
+  },
+  "observability": {
+    "enabled": true,
+    "logs": {
+      "head_sampling_rate": 1
+    },
+    "traces": {
+      "enabled": true,
+      "head_sampling_rate": 1
+    }
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "freesauce-db",
+      "database_id": "73829d8d-49df-4bf0-8a7b-70869a4ff08c",
+      "migrations_dir": "drizzle"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "IMAGES",
+      "bucket_name": "freesauce-images"
+    }
+  ],
+  "vars": {
+    "RESEND_FROM": "Free Sauce <freesauce@updates.mcpickle.com.au>"
+  }
+}
