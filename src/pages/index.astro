@@ -76,12 +76,7 @@ import Layout from '../layouts/Layout.astro';
     <script>
         import L from 'leaflet';
 
-        const map = L.map('map').setView([-25.5, 134], 4);
-
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-            attribution: '© OpenStreetMap contributors',
-            maxZoom: 18,
-        }).addTo(map);
+        let map: L.Map | null = null;
 
         function timeAgo(dateString: string) {
             const now = new Date();
@@ -123,10 +118,11 @@ import Layout from '../layouts/Layout.astro';
             });
 
         let showUnverified = false;
-        const verifiedMarkers: L.Marker[] = [];
-        const unverifiedMarkers: L.Marker[] = [];
+        let verifiedMarkers: L.Marker[] = [];
+        let unverifiedMarkers: L.Marker[] = [];
 
         async function loadShops() {
+            if (!map) return;
             try {
                 const res = await fetch('/api/shops');
                 const shops = await res.json();
@@ -181,7 +177,7 @@ import Layout from '../layouts/Layout.astro';
           `);
 
                     if (shop.verified) {
-                        marker.addTo(map);
+                        marker.addTo(map!);
                         verifiedMarkers.push(marker);
                     } else {
                         unverifiedMarkers.push(marker);
@@ -194,70 +190,108 @@ import Layout from '../layouts/Layout.astro';
                     ) as HTMLInputElement | null;
                     if (cb) cb.checked = true;
                     showUnverified = true;
-                    unverifiedMarkers.forEach((m) => m.addTo(map));
+                    unverifiedMarkers.forEach((m) => m.addTo(map!));
                 }
             } catch (e) {
                 console.error('Failed to load shops:', e);
             }
         }
 
-        loadShops();
+        function initMap() {
+            const el = document.getElementById('map');
+            if (!el) return;
 
-        const showUnverifiedEl = document.getElementById(
-            'showUnverified'
-        ) as HTMLInputElement | null;
-        showUnverifiedEl?.addEventListener('change', (e) => {
-            showUnverified = (e.target as HTMLInputElement).checked;
-            unverifiedMarkers.forEach((m) => {
-                if (showUnverified) m.addTo(map);
-                else m.remove();
-            });
-            localStorage.setItem('showUnverified', String(showUnverified));
-        });
-
-        const nearMeBtn = document.getElementById(
-            'nearMe'
-        ) as HTMLButtonElement | null;
-        nearMeBtn?.addEventListener('click', () => {
-            if (!nearMeBtn) return;
-            nearMeBtn.textContent = '📍 Finding your sauce...';
-            nearMeBtn.disabled = true;
-
-            if (!navigator.geolocation) {
-                alert("Your browser doesn't support geolocation, mate.");
-                nearMeBtn.textContent = '📍 Free Sauce Near Me';
-                nearMeBtn.disabled = false;
-                return;
+            if (map) {
+                try {
+                    map.remove();
+                } catch (_) {}
+                map = null;
             }
 
-            navigator.geolocation.getCurrentPosition(
-                (pos) => {
-                    map.setView(
-                        [pos.coords.latitude, pos.coords.longitude],
-                        12
-                    );
-                    L.marker([pos.coords.latitude, pos.coords.longitude], {
-                        icon: L.divIcon({
-                            className: 'you-marker',
-                            html: '<div style="background:#3498db;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
-                            iconSize: [16, 16],
-                            iconAnchor: [8, 8],
-                        }),
-                    })
-                        .addTo(map)
-                        .bindPopup('📍 You are here')
-                        .openPopup();
+            verifiedMarkers = [];
+            unverifiedMarkers = [];
+            showUnverified = false;
+
+            map = L.map(el).setView([-25.5, 134], 4);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '© OpenStreetMap contributors',
+                maxZoom: 18,
+            }).addTo(map);
+
+            loadShops();
+
+            const showUnverifiedEl = document.getElementById(
+                'showUnverified'
+            ) as HTMLInputElement | null;
+            showUnverifiedEl?.addEventListener('change', (e) => {
+                if (!map) return;
+                showUnverified = (e.target as HTMLInputElement).checked;
+                unverifiedMarkers.forEach((m) => {
+                    if (showUnverified) m.addTo(map!);
+                    else m.remove();
+                });
+                localStorage.setItem('showUnverified', String(showUnverified));
+            });
+
+            const nearMeBtn = document.getElementById(
+                'nearMe'
+            ) as HTMLButtonElement | null;
+            nearMeBtn?.addEventListener('click', () => {
+                if (!nearMeBtn || !map) return;
+                nearMeBtn.textContent = '📍 Finding your sauce...';
+                nearMeBtn.disabled = true;
+
+                if (!navigator.geolocation) {
+                    alert("Your browser doesn't support geolocation, mate.");
                     nearMeBtn.textContent = '📍 Free Sauce Near Me';
                     nearMeBtn.disabled = false;
-                },
-                () => {
-                    alert(
-                        "Couldn't get your location. Check your permissions, legend."
-                    );
-                    nearMeBtn.textContent = '📍 Free Sauce Near Me';
-                    nearMeBtn.disabled = false;
+                    return;
                 }
-            );
+
+                navigator.geolocation.getCurrentPosition(
+                    (pos) => {
+                        if (!map) return;
+                        map.setView(
+                            [pos.coords.latitude, pos.coords.longitude],
+                            12
+                        );
+                        L.marker(
+                            [pos.coords.latitude, pos.coords.longitude],
+                            {
+                                icon: L.divIcon({
+                                    className: 'you-marker',
+                                    html: '<div style="background:#3498db;width:16px;height:16px;border-radius:50%;border:3px solid white;box-shadow:0 2px 6px rgba(0,0,0,0.3);"></div>',
+                                    iconSize: [16, 16],
+                                    iconAnchor: [8, 8],
+                                }),
+                            }
+                        )
+                            .addTo(map)
+                            .bindPopup('📍 You are here')
+                            .openPopup();
+                        nearMeBtn.textContent = '📍 Free Sauce Near Me';
+                        nearMeBtn.disabled = false;
+                    },
+                    () => {
+                        alert(
+                            "Couldn't get your location. Check your permissions, legend."
+                        );
+                        nearMeBtn.textContent = '📍 Free Sauce Near Me';
+                        nearMeBtn.disabled = false;
+                    }
+                );
+            });
+        }
+
+        document.addEventListener('astro:page-load', initMap);
+        document.addEventListener('astro:before-swap', () => {
+            if (map) {
+                try {
+                    map.remove();
+                } catch (_) {}
+                map = null;
+            }
         });
     </script>
 </Layout>
