@@ -3,9 +3,15 @@
     // main set by astro build output
     "compatibility_date": "2024-12-01",
     "compatibility_flags": ["nodejs_compat"],
+    "workers_dev": true,
+    "preview_urls": true,
     "assets": {
         "directory": "./dist/client",
     },
+    "routes": [
+        { "pattern": "thefreesauce.quest", "custom_domain": true },
+        { "pattern": "www.thefreesauce.quest", "custom_domain": true },
+    ],
     "observability": {
         "enabled": true,
         "logs": {
