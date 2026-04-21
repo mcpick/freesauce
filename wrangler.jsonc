@@ -8,7 +8,10 @@
     "assets": {
         "directory": "./dist/client",
     },
-    "routes": [{ "pattern": "thefreesauce.quest", "custom_domain": true }],
+    "routes": [
+        { "pattern": "thefreesauce.quest", "custom_domain": true },
+        { "pattern": "www.thefreesauce.quest", "custom_domain": true },
+    ],
     "observability": {
         "enabled": true,
         "logs": {
