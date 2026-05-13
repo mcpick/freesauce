@@ -1,0 +1,178 @@
+---
+export const prerender = false;
+
+import Layout from '../layouts/Layout.astro';
+// @ts-ignore - cloudflare:workers is a CF runtime module
+import { env } from 'cloudflare:workers';
+import { createDb } from '@/db';
+import { shops, votes } from '@/db/schema';
+import { sql, desc } from 'drizzle-orm';
+
+const db = createDb(env.DB);
+
+const lastActivity = sql<string>`COALESCE(
+    (SELECT MAX(${votes.confirmed_at}) FROM ${votes}
+     WHERE ${votes.shop_id} = ${shops.id} AND ${votes.status} = 'confirmed'),
+    ${shops.created_at}
+)`;
+
+let feed: any[] = [];
+try {
+    feed = await db
+        .select({
+            id: shops.id,
+            name: shops.name,
+            address: shops.address,
+            suburb: shops.suburb,
+            state: shops.state,
+            slug: shops.slug,
+            sauce_types: shops.sauce_types,
+            verified: shops.verified,
+            photo_key: shops.photo_key,
+            google_photo_key: shops.google_photo_key,
+            created_at: shops.created_at,
+            vote_up_count: sql<number>`COALESCE(
+                (SELECT COUNT(*) FROM ${votes}
+                 WHERE ${votes.shop_id} = ${shops.id} AND ${votes.vote} = 'up' AND ${votes.status} = 'confirmed'),
+                0
+            )`,
+            vote_down_count: sql<number>`COALESCE(
+                (SELECT COUNT(*) FROM ${votes}
+                 WHERE ${votes.shop_id} = ${shops.id} AND ${votes.vote} = 'down' AND ${votes.status} = 'confirmed'),
+                0
+            )`,
+            last_activity: lastActivity,
+        })
+        .from(shops)
+        .orderBy(desc(lastActivity))
+        .limit(100);
+} catch (_) {
+    feed = [];
+}
+
+Astro.response.headers.set('Cache-Control', 'public, max-age=900, s-maxage=900');
+
+function timeAgo(dateString: string): string {
+    if (!dateString) return '';
+    const now = new Date();
+    const date = new Date(dateString.includes('T') ? dateString : dateString.replace(' ', 'T') + 'Z');
+    const diffMs = now.getTime() - date.getTime();
+    const diffMins = Math.floor(diffMs / (1000 * 60));
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+
+    if (diffDays > 365) {
+        const years = Math.floor(diffDays / 365);
+        return `${years} year${years > 1 ? 's' : ''} ago`;
+    } else if (diffDays > 30) {
+        const months = Math.floor(diffDays / 30);
+        return `${months} month${months > 1 ? 's' : ''} ago`;
+    } else if (diffDays > 0) {
+        return `${diffDays} day${diffDays > 1 ? 's' : ''} ago`;
+    } else if (diffHours > 0) {
+        return `${diffHours} hour${diffHours > 1 ? 's' : ''} ago`;
+    } else if (diffMins > 0) {
+        return `${diffMins} min${diffMins > 1 ? 's' : ''} ago`;
+    } else {
+        return 'Just now';
+    }
+}
+---
+
+<Layout
+    title="Recent Sauce Placements — Free Sauce"
+    description="The 100 most recent pie shop sauce placements across Australia."
+>
+    <main class="mx-auto max-w-[900px] p-6">
+        <header class="mb-6">
+            <h1 class="mb-1 text-3xl text-primary sm:text-4xl">
+                🥫 Recent Sauce Placements
+            </h1>
+            <p class="opacity-80">
+                The 100 most recently active pie shops on the sauce map.
+            </p>
+        </header>
+
+        {
+            feed.length === 0 ? (
+                <p class="rounded-xl bg-neutral-50 p-6 text-center opacity-70">
+                    Nothing on the feed yet. Be the first to <a class="font-semibold text-primary hover:underline" href="/add">add a pie shop</a>.
+                </p>
+            ) : (
+                <ul class="flex list-none flex-col gap-3 p-0">
+                    {feed.map((s: any) => {
+                        const photo = s.photo_key
+                            ? `/api/photo/${encodeURIComponent(s.photo_key)}`
+                            : s.google_photo_key
+                              ? `/api/photo/${encodeURIComponent(s.google_photo_key)}`
+                              : null;
+                        const sauces = (s.sauce_types || 'tomato')
+                            .split(',')
+                            .map((x: string) => x.trim())
+                            .filter(Boolean);
+                        const where = [s.suburb, s.state].filter(Boolean).join(', ');
+                        return (
+                            <li class="rounded-xl border border-neutral-200 bg-white p-3 transition hover:border-primary hover:shadow-sm">
+                                <a
+                                    href={s.slug ? `/shop/${s.slug}` : '#'}
+                                    class="flex items-start gap-3 no-underline"
+                                >
+                                    <div class="aspect-square w-16 shrink-0 overflow-hidden rounded-lg bg-neutral-100 sm:w-20">
+                                        {photo ? (
+                                            <img
+                                                src={photo}
+                                                alt={s.name}
+                                                loading="lazy"
+                                                class="h-full w-full object-cover"
+                                            />
+                                        ) : (
+                                            <div class="flex h-full w-full items-center justify-center text-2xl text-neutral-400">
+                                                🥫
+                                            </div>
+                                        )}
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <div class="flex items-start justify-between gap-2">
+                                            <h2 class="truncate text-base font-bold text-ink sm:text-lg">
+                                                {s.name}
+                                                {s.verified ? (
+                                                    <span class="ml-1 text-success">✅</span>
+                                                ) : null}
+                                            </h2>
+                                            <span class="shrink-0 text-xs opacity-60">
+                                                {timeAgo(s.last_activity)}
+                                            </span>
+                                        </div>
+                                        {where && (
+                                            <p class="truncate text-sm opacity-70">
+                                                📍 {where}
+                                            </p>
+                                        )}
+                                        <div class="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs">
+                                            <span class="flex flex-wrap gap-1">
+                                                {sauces.map((sauce: string) => (
+                                                    <span class="rounded-full bg-primary/10 px-2 py-0.5 font-semibold text-primary">
+                                                        {sauce}
+                                                    </span>
+                                                ))}
+                                            </span>
+                                            {(s.vote_up_count > 0 || s.vote_down_count > 0) && (
+                                                <span class="opacity-70">
+                                                    👍 {s.vote_up_count} · 👎 {s.vote_down_count}
+                                                </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                </a>
+                            </li>
+                        );
+                    })}
+                </ul>
+            )
+        }
+
+        <div class="mt-8 text-center text-sm opacity-60">
+            Updated every 15 minutes. <a class="font-semibold text-primary hover:underline" href="/api/feed">JSON feed</a>.
+        </div>
+    </main>
+</Layout>
